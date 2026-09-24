@@ -3,7 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView 
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 
-export default function ProfileScreen() {
+const ProfileScreen = () => {
+
     const [isEditing, setIsEditing] = useState(false);
 
     const [firstName, setFirstName] = useState("ชุติมณฑน์");
@@ -293,3 +294,5 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
 });
+
+export default ProfileScreen

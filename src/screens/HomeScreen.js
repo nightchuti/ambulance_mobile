@@ -2,13 +2,11 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native'
 import { MaterialIcons, FontAwesome5, Ionicons, MaterialCommunityIcons, } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import MenuModal from "../modal/MenuModal";
 
 const HomeScreen = ({ navigation }) => {
 
     const [location, setLocation] = useState(null);
     const [address, setAddress] = useState("กำลังระบุตำแหน่ง...");
-    const [menuVisible, setMenuVisible] = useState(false);
 
     const emergencyType = [
         { title: "อุบัติเหตุรถ", icon: <MaterialCommunityIcons name="car" size={35} color="#F59E0B" />, },
@@ -130,20 +128,8 @@ const HomeScreen = ({ navigation }) => {
                     size={28}
                 />
                 <Text style={styles.callText}>โทร 1669 สายด่วนฉุกเฉิน</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> 
 
-            {/* <MenuModal
-                visible={menuVisible}
-                onClose={() => setMenuVisible(false)}
-                onProfile={() => {
-                    setMenuVisible(false);
-                    navigation.navigate("Profile");
-                }}
-                onLogout={() => {
-                    setMenuVisible(false);
-                    navigation.replace("Login");
-                }}
-            /> */}
 
         </ScrollView>
     )

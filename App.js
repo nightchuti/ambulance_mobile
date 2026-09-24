@@ -8,10 +8,12 @@ import HomeScreen from './src/screens/HomeScreen';
 import ReportScreen from './src/screens/ReportScreen';
 import AEDMapScreen from './src/screens/AEDMapScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
+import StatusScreen from './src/screens/StatusScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{
@@ -26,10 +28,10 @@ export default function App() {
           name='Home'
           component={HomeScreen}
           options={{
-            title: 'KPS Ambulance', 
+            title: 'KPS Ambulance',
             headerRight: () => (
               <TouchableOpacity
-                onPress={() => {}}
+                onPress={() => { }}
                 style={{ marginRight: 15 }}
               >
                 <Text style={{ color: "#fff", fontSize: 28 }}>
@@ -39,8 +41,9 @@ export default function App() {
             ),
           }} />
         <Stack.Screen name='Report' component={ReportScreen} options={{ title: 'แจ้งเหตุฉุกเฉิน' }} />
+        <Stack.Screen name='Status' component={StatusScreen} options={{ title: 'สถานะการช่วยเหลือ' }} />
         <Stack.Screen name='AEDMap' component={AEDMapScreen} options={{ title: 'แผนที่ AED' }} />
-      
+
       </Stack.Navigator>
     </NavigationContainer>
   );

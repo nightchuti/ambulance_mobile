@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Alert, TextInput, Image } from 'react-native';
 import { MaterialIcons, FontAwesome5, Ionicons, MaterialCommunityIcons, } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 
@@ -20,32 +20,32 @@ const ReportScreen = ({ navigation, route }) => {
         { title: "เหตุอื่น ๆ", icon: <MaterialIcons name="error" size={33} color="#64748B" />, },
     ];
 
-    // const pickImage = async () => {
-    //     const result = await ImagePicker.launchImageLibraryAsync({
-    //         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    //         allowsMultipleSelection: true,
-    //         quality: 0.7,
-    //     });
-    //     if (!result.canceled) {
-    //         setImages([...images, ...result.assets]);
-    //     }
-    // };
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsMultipleSelection: true,
+            quality: 0.7,
+        });
+        if (!result.canceled) {
+            setImages([...images, ...result.assets]);
+        }
+    };
 
-    // const takePhoto = async () => {
-    //     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    //     if (status !== "granted") {
-    //         Alert.alert("ไม่ได้รับอนุญาต", "กรุณาเปิดสิทธิ์กล้องก่อนถ่ายรูป");
-    //         return;
-    //     }
-    //     const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
-    //     if (!result.canceled) {
-    //         setImages([...images, ...result.assets]);
-    //     }
-    // };
+    const takePhoto = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert("ไม่ได้รับอนุญาต", "กรุณาเปิดสิทธิ์กล้องก่อนถ่ายรูป");
+            return;
+        }
+        const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
+        if (!result.canceled) {
+            setImages([...images, ...result.assets]);
+        }
+    };
 
-    // const removeImage = (indexToRemove) => {
-    //     setImages(images.filter((_, index) => index !== indexToRemove));
-    // };
+    const removeImage = (indexToRemove) => {
+        setImages(images.filter((_, index) => index !== indexToRemove));
+    };
 
     return (
         <View style={styles.container}>
@@ -91,7 +91,7 @@ const ReportScreen = ({ navigation, route }) => {
                 />
             </View>
 
-            {/* <View style={styles.card}>
+            <View style={styles.card}>
                 <View style={styles.cardHeader}>
                     <Text style={styles.cardTitle}>รูปภาพประกอบ ({images.length})</Text>
                 </View>
@@ -113,7 +113,12 @@ const ReportScreen = ({ navigation, route }) => {
                         </View>
                     ))}
                 </View>
-            </View> */}
+            </View>
+
+            <TouchableOpacity style={styles.sendButton} onPress={() => navigation.navigate('Status')} >
+                <Text style={styles.sendButtonText}>ส่งแจ้งเหตุฉุกเฉิน</Text>
+            </TouchableOpacity>
+
         </View>
     )
 }
@@ -165,7 +170,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF",
         borderRadius: 14,
         padding: 12,
-        marginHorizontal: 12,
+        marginHorizontal: 20,
         marginBottom: 10,
         borderWidth: 1,
         borderColor: "#F1F5F9",
@@ -178,7 +183,6 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 16,
         fontWeight: "700",
-        color: "#334155",
         marginLeft: 6,
     },
     locText: {
@@ -188,7 +192,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#E2E8F0",
         fontSize: 16,
-        color: "#1E293B",
     },
     input: {
         backgroundColor: "#F8FAFC",
@@ -202,50 +205,68 @@ const styles = StyleSheet.create({
         textAlignVertical: "top",
     },
 
-    // imgRow: {
-    //     flexDirection: "row",
-    //     flexWrap: "wrap",
-    //     gap: 8,
-    // },
-    // addImgBtn: {
-    //     width: 60, // ลดขนาดกล่องรูปภาพ
-    //     height: 60,
-    //     borderRadius: 10,
-    //     backgroundColor: "#F8FAFC",
-    //     borderWidth: 1,
-    //     borderColor: "#CBD5E1",
-    //     borderStyle: "dashed",
-    //     alignItems: "center",
-    //     justifyContent: "center",
-    // },
-    // addImgTxt: {
-    //     fontSize: 10,
-    //     color: "#64748B",
-    //     marginTop: 2,
-    //     fontWeight: "600",
-    // },
-    // thumbWrapper: {
-    //     position: "relative",
-    // },
-    // thumb: {
-    //     width: 60,
-    //     height: 60,
-    //     borderRadius: 10,
-    //     backgroundColor: "#E2E8F0",
-    // },
-    // deleteBadge: {
-    //     position: "absolute",
-    //     top: -6,
-    //     right: -6,
-    //     backgroundColor: "#EF4444",
-    //     width: 20,
-    //     height: 20,
-    //     borderRadius: 10,
-    //     alignItems: "center",
-    //     justifyContent: "center",
-    //     borderWidth: 1.5,
-    //     borderColor: "#FFF",
-    // },
+    imgRow: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 8,
+    },
+    addImgBtn: {
+        width: 60,
+        height: 60,
+        borderRadius: 10,
+        backgroundColor: "#F8FAFC",
+        borderWidth: 1,
+        borderColor: "#CBD5E1",
+        borderStyle: "dashed",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    addImgTxt: {
+        fontSize: 10,
+        color: "#64748B",
+        marginTop: 2,
+        fontWeight: "600",
+    },
+    thumbWrapper: {
+        position: "relative",
+    },
+    thumb: {
+        width: 60,
+        height: 60,
+        borderRadius: 10,
+        backgroundColor: "#E2E8F0",
+    },
+    deleteBadge: {
+        position: "absolute",
+        top: -6,
+        right: -6,
+        backgroundColor: "#EF4444",
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1.5,
+        borderColor: "#FFF",
+    },
+
+    sendButton: {
+        justifyContent: "center",
+        marginTop: "auto",
+        width: "auto",
+        height: 50,
+        marginBottom: 20,
+        marginHorizontal: 20,
+        borderRadius: 10,
+        alignItems: "center",
+        backgroundColor: "#f21212",
+    },
+    sendButtonText: {
+        fontSize: 16,
+        color: "#fff",
+        fontWeight: "bold",
+    }
+
 });
 
 export default ReportScreen
