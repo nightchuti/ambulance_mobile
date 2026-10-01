@@ -1,15 +1,23 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Modal, Alert, ActivityIndicator } from 'react-native';
 import TextFormInput from "../components/TextFormInput";
 import SelectFormInput from "../components/SelectFormInput";
 import DateFormInput from "../components/DateFormInput";
 
 const RegisterScreen = ({ navigation }) => {
 
+    const [firstname, setFirstname] = useState("");
+    const [lastname, setLastname] = useState("");
     const [gender, setGender] = useState("");
+    const [birthDate, setBirthDate] = useState(null);
+    const [idcard, setIDcard] = useState("");
+    const [number, setNumber] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [consent, setConsent] = useState(false);
     const [showConsent, setShowConsent] = useState(false);
-    const [birthDate, setBirthDate] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     return (
         <ScrollView style={styles.container}>
@@ -20,14 +28,24 @@ const RegisterScreen = ({ navigation }) => {
             <Text style={styles.title}>KPS Ambulance</Text>
 
             <View style={styles.formSection}>
-                <TextFormInput
-                    label="ชื่อ"
-                    placeholder="กรอกชื่อของคุณ"
-                />
-                <TextFormInput
-                    label="นามสกุล"
-                    placeholder="กรอกนามสกุลของคุณ"
-                />
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                    <View style={{ flex: 1 }}>
+                        <TextFormInput
+                            label="ชื่อ"
+                            placeholder="กรอกชื่อของคุณ"
+                            value={firstname}
+                            onChangeText={setFirstname}
+                        />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                        <TextFormInput
+                            label="นามสกุล"
+                            placeholder="กรอกนามสกุลของคุณ"
+                            value={lastname}
+                            onChangeText={setLastname}
+                        />
+                    </View>
+                </View>
                 <SelectFormInput
                     label="เพศ"
                     value={gender}
@@ -35,38 +53,51 @@ const RegisterScreen = ({ navigation }) => {
                     placeholder="เลือกเพศของคุณ"
                     options={["ชาย", "หญิง", "อื่นๆ"]}
                 />
-                {/* <TextFormInput
-                    label="วัน/เดือน/ปีเกิด"
-                    placeholder="กรอกวัน/เดือน/ปีเกิดของคุณ"
-                /> */}
-                {/* //ยังไม่เทสปุ่มวันที่ */}
                 <DateFormInput
-                    label="วัน/เดือน/ปีเกิด"
-                    placeholder="กรอกวัน/เดือน/ปีเกิดของคุณ"
+                    label="วันเกิด"
+                    placeholder="กรอกวัน/เดือน/ปี (ค.ศ.)"
                     value={birthDate}
                     onChange={setBirthDate}
                 />
                 <TextFormInput
                     label="เลขบัตรประชาชน"
                     placeholder="กรอกเลขบัตรประชาชนของคุณ"
+                    value={idcard}
+                    onChangeText={setIDcard}
+                    keyboardType="number-pad"
+                    maxLength={13}
                 />
                 <TextFormInput
                     label="เบอร์โทรศัพท์"
-                    placeholder="0xx-xxx-xxxx"
+                    placeholder="0xxxxxxxxx"
+                    value={number}
+                    onChangeText={setNumber}
+                    keyboardType="phone-pad"
+                    maxLength={10}
                 />
                 <TextFormInput
                     label="อีเมล"
                     placeholder="กรอกอีเมลของคุณ"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                 />
                 <TextFormInput
                     label="รหัสผ่าน"
                     placeholder="กรอกรหัสผ่านของคุณ"
+                    value={password}
+                    onChangeText={setPassword}
                     secureTextEntry={true}
+                    autoCapitalize="none"
                 />
                 <TextFormInput
                     label="ยืนยันรหัสผ่าน"
                     placeholder="กรอกยืนยันรหัสผ่านของคุณ"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
                     secureTextEntry={true}
+                    autoCapitalize="none"
                 />
                 <View style={styles.consentContainer}>
                     <TouchableOpacity
@@ -97,11 +128,13 @@ const RegisterScreen = ({ navigation }) => {
                         if (!consent) {
                             return;
                         }
-                        navigation.navigate('Home');
+                        // navigation.navigate('Home');
+                        handleRegister();
                     }}
                 >
                     <Text style={styles.signUpButtonText}>สมัครสมาชิก</Text>
                 </TouchableOpacity>
+
             </View>
 
             <View style={styles.loginSection}>
@@ -187,6 +220,7 @@ const styles = StyleSheet.create({
     },
     formSection: {
         marginTop: 10,
+        marginBottom: 20,
         marginHorizontal: 20,
         backgroundColor: "#fff",
         borderRadius: 12,
@@ -229,7 +263,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "flex-start",
         marginHorizontal: 20,
-        marginTop: 10,
+        marginTop: 20,
         marginBottom: 10,
     },
     consentRow: {

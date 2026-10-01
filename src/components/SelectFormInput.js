@@ -1,35 +1,29 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { Dropdown } from "react-native-element-dropdown";
 
-const SelectFormInput = ({ label, value, onValueChange, placeholder, options = [], }) => {
+const SelectFormDropdown = ({ label, value, onValueChange, placeholder, options = [], }) => {
+  const data = options.map((item) => ({value: item}));
+
   return (
     <View style={styles.wrapper}>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{label}</Text>
+      <Text style={styles.cardTitle}>{label}</Text>
 
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={value}
-            onValueChange={onValueChange}
-            style={[
-              styles.picker,
-              { color: value === "" ? "#999" : "#000" },
-            ]}
-          >
-            <Picker.Item label={placeholder} value="" />
-
-            {options.map((item, index) => (
-              <Picker.Item
-                key={index}
-                label={item}
-                value={item}
-                style={{ fontSize: 14 }}
-              />
-            ))}
-          </Picker>
-        </View>
-      </View>
+      <Dropdown
+        style={styles.dropdown}
+        placeholderStyle={styles.placeholder}
+        selectedTextStyle={styles.selectedText}
+        itemTextStyle={styles.itemText}
+        containerStyle={styles.listContainer}
+        data={data}
+        labelField="value"
+        valueField="value"
+        placeholder={placeholder}
+        value={value || null}
+        onChange={(item) => onValueChange(item.value)}
+        dropdownPosition="bottom"
+        maxHeight={220}
+      />
     </View>
   );
 };
@@ -37,30 +31,34 @@ const SelectFormInput = ({ label, value, onValueChange, placeholder, options = [
 const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: 12,
-    gap: 8,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
-    elevation: 2,
+    gap: 8
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginTop: 10
   },
-  pickerWrapper: {
+  dropdown: {
+    height: 45,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    overflow: "hidden",
+    paddingHorizontal: 12,
   },
-  picker: {
+  placeholder: {
     fontSize: 16,
-    height: 50,
-    width: "100%",
+    color: "#999"
+  },
+  selectedText: {
+    fontSize: 16,
+    color: "#000"
+  },
+  itemText: {
+    fontSize: 16
+  },
+  listContainer: {
+    borderRadius: 8,
   },
 });
 
-export default SelectFormInput;
+export default SelectFormDropdown;
