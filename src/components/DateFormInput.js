@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-nativ
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-const DateFormInput = ({ label, placeholder = "วว/ดด/ปปปป", value, onChange }) => {
+const DateFormInput = ({ label, placeholder = "วว/ดด/ปปปป", value, onChange, error }) => {
     const [text, setText] = useState("");
     const [showPicker, setShowPicker] = useState(false);
 
@@ -52,7 +52,7 @@ const DateFormInput = ({ label, placeholder = "วว/ดด/ปปปป", valu
         <View style={styles.wrapper}>
             <Text style={styles.label}>{label}</Text>
 
-            <View style={styles.inputRow}>
+            <View style={[styles.inputRow, error && styles.inputRowError]}>
                 <TextInput
                     style={styles.input}
                     value={text}
@@ -65,6 +65,8 @@ const DateFormInput = ({ label, placeholder = "วว/ดด/ปปปป", valu
                     <Ionicons name="calendar-outline" size={20} color="black" />
                 </TouchableOpacity>
             </View>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             {showPicker && (
                 <DateTimePicker
@@ -101,6 +103,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         paddingVertical: 10,
     },
+    inputRowError: {
+        borderColor: "#f21212"
+    },
+    errorText: {
+        color: "#f21212",
+        fontSize: 13
+    }
 });
 
 export default DateFormInput;

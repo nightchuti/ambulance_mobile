@@ -2,15 +2,15 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 
-const SelectFormDropdown = ({ label, value, onValueChange, placeholder, options = [], }) => {
-  const data = options.map((item) => ({value: item}));
+const SelectFormDropdown = ({ label, value, onValueChange, placeholder, options = [], error, }) => {
+  const data = options.map((item) => ({ value: item }));
 
   return (
     <View style={styles.wrapper}>
       <Text style={styles.cardTitle}>{label}</Text>
 
       <Dropdown
-        style={styles.dropdown}
+        style={[styles.dropdown, error && styles.dropdownError]}
         placeholderStyle={styles.placeholder}
         selectedTextStyle={styles.selectedText}
         itemTextStyle={styles.itemText}
@@ -24,6 +24,7 @@ const SelectFormDropdown = ({ label, value, onValueChange, placeholder, options 
         dropdownPosition="bottom"
         maxHeight={220}
       />
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 };
@@ -58,6 +59,13 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     borderRadius: 8,
+  },
+  dropdownError: {
+    borderColor: "#f21212"
+  },
+  errorText: {
+    color: "#f21212",
+    fontSize: 13
   },
 });
 
