@@ -40,7 +40,6 @@ const LoginScreen = ({ navigation }) => {
 
         try {
             await signInWithEmailAndPassword(auth, cleanEmail, password);
-            navigation.replace("Home");
         } catch (error) {
             if (error.code === "auth/invalid-credential" ||
                 error.code === "auth/user-not-found" ||
