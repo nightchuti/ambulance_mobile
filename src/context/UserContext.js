@@ -10,30 +10,26 @@ export const UserProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [initializing, setInitializing] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
 
+  // 1) ติดตามสถานะล็อกอิน
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setAuthUser(u);
-      if (!u) setProfile(null);
+    return onAuthStateChanged(auth, (user) => {
+      setAuthUser(user);
       setInitializing(false);
     });
-    return unsub;
   }, []);
 
+  // 2) ล็อกอินแล้วค่อยฟังโปรไฟล์ / ออกจากระบบแล้วล้างโปรไฟล์
   useEffect(() => {
-    if (!authUser) return;
-    setProfileLoading(true);
-    const unsub = subscribeUserProfile(
-      authUser.uid,
-      (p) => { setProfile(p); setProfileLoading(false); },
-      () => setProfileLoading(false)
-    );
-    return unsub;
+    if (!authUser) {
+      setProfile(null);
+      return;
+    }
+    return subscribeUserProfile(authUser.uid, setProfile);
   }, [authUser?.uid]);
 
   return (
-    <UserContext.Provider value={{ authUser, profile, initializing, profileLoading }}>
+    <UserContext.Provider value={{ authUser, profile, initializing }}>
       {children}
     </UserContext.Provider>
   );

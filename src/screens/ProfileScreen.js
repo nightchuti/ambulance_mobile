@@ -217,6 +217,195 @@
 //         </ScrollView>
 //     );
 // }
+/////////////////////////////////
+
+// import React, { useEffect, useState } from "react";
+// import {
+//     View, Text, TextInput, TouchableOpacity, StyleSheet, Image,
+//     ScrollView, Alert, ActivityIndicator,
+// } from "react-native";
+// import { Picker } from "@react-native-picker/picker";
+// import * as ImagePicker from "expo-image-picker";
+// import { useUser } from "../context/UserContext";
+// import { updateUserProfile, getUserPrivate } from "../services/userService";
+// import { uploadImage } from "../services/cloudinaryService";
+
+// const maskIdCard = (id) =>
+//     id && id.length === 13 ? `${id[0]}-xxxx-xxxxx-${id.slice(10, 12)}-${id[12]}` : "-";
+
+// const ProfileScreen = () => {
+//     const { authUser, profile } = useUser();
+//     const uid = authUser.uid;
+
+//     const [isEditing, setIsEditing] = useState(false);
+//     const [saving, setSaving] = useState(false);
+//     const [idcard, setIdcard] = useState("");
+//     const [firstName, setFirstName] = useState("");
+//     const [lastName, setLastName] = useState("");
+//     const [phone, setPhone] = useState("");
+//     const [gender, setGender] = useState("");
+
+//     const fillForm = (p) => {
+//         setFirstName(p.firstname || "");
+//         setLastName(p.lastname || "");
+//         setPhone(p.phone || "");
+//         setGender(p.gender || "");
+//     };
+
+//     // ซิงก์ฟอร์มกับข้อมูลจริง (เฉพาะตอนไม่ได้กำลังแก้ไข)
+//     useEffect(() => {
+//         if (profile && !isEditing) fillForm(profile);
+//     }, [profile, isEditing]);
+
+//     // เลขบัตรดึงเฉพาะหน้านี้ ไม่เก็บใน context
+//     useEffect(() => {
+//         getUserPrivate(uid).then((d) => d && setIdcard(d.idcard)).catch(() => { });
+//     }, [uid]);
+
+//     if (!profile) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
+
+//     const handleSave = async () => {
+//         const fn = firstName.trim();
+//         const ln = lastName.trim();
+//         if (!/^[ก-๙a-zA-Z\s]{2,30}$/.test(fn) || !/^[ก-๙a-zA-Z\s]{2,30}$/.test(ln)) {
+//             return Alert.alert("ข้อมูลไม่ถูกต้อง", "ชื่อและนามสกุลต้องเป็นตัวอักษรไทยหรืออังกฤษ 2-30 ตัว");
+//         }
+//         if (!gender) return Alert.alert("ข้อมูลไม่ถูกต้อง", "กรุณาเลือกเพศ");
+//         if (!/^0[689]\d{8}$/.test(phone)) {
+//             return Alert.alert("ข้อมูลไม่ถูกต้อง", "เบอร์โทรต้องเป็นเบอร์มือถือ 10 หลัก");
+//         }
+
+//         setSaving(true);
+//         try {
+//             await updateUserProfile(uid, { firstname: fn, lastname: ln, gender, phone });
+//             setIsEditing(false);
+//         } catch {
+//             Alert.alert("ผิดพลาด", "บันทึกไม่สำเร็จ กรุณาลองใหม่");
+//         } finally {
+//             setSaving(false);
+//         }
+//     };
+
+//     const handleCancel = () => {
+//         fillForm(profile);
+//         setIsEditing(false);
+//     };
+
+//     const handleChangeProfileImage = async () => {
+//         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//         if (!permission.granted) {
+//             return Alert.alert("ไม่ได้รับอนุญาต", "กรุณาอนุญาตให้แอปเข้าถึงรูปภาพ");
+//         }
+
+//         const result = await ImagePicker.launchImageLibraryAsync({
+//             mediaTypes: ["images"],
+//             allowsEditing: true,
+//             aspect: [1, 1],
+//             quality: 0.8,
+//         });
+//         if (result.canceled) return;
+
+//         const uri = result.assets?.[0]?.uri;
+//         if (!uri) return Alert.alert("ผิดพลาด", "ไม่พบไฟล์รูปภาพ");
+
+//         setSaving(true);
+//         try {
+//             const { url, publicId } = await uploadImage(uri, `profiles/${uid}`);
+//             await updateUserProfile(uid, { photoURL: url, photoPublicId: publicId });
+//         } catch (error) {
+//             console.error("Upload profile image error:", error);
+//             Alert.alert("ผิดพลาด", error?.message || "อัปโหลดรูปไม่สำเร็จ");
+//         } finally {
+//             setSaving(false);
+//         }
+//     };
+
+//     const birthText = profile.birthDate
+//         ? new Date(profile.birthDate).toLocaleDateString("th-TH", { dateStyle: "long" })
+//         : "-";
+
+//     return (
+//         <ScrollView style={styles.container}>
+//             <Text style={styles.title}>ข้อมูลส่วนตัว</Text>
+
+//             <View style={styles.profileSection}>
+//                 <Image
+//                     source={profile.photoURL ? { uri: profile.photoURL } : require("../../assets/logo.png")}
+//                     style={styles.profileImage}
+//                 />
+//                 {isEditing && (
+//                     <TouchableOpacity onPress={handleChangeProfileImage} disabled={saving}>
+//                         <Text style={styles.changeImageText}>เปลี่ยนรูปโปรไฟล์</Text>
+//                     </TouchableOpacity>
+//                 )}
+//             </View>
+
+//             <View style={styles.field}>
+//                 <Text style={styles.label}>ชื่อ</Text>
+//                 {isEditing
+//                     ? <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} />
+//                     : <Text style={styles.value}>{profile.firstname}</Text>}
+//             </View>
+
+//             <View style={styles.field}>
+//                 <Text style={styles.label}>นามสกุล</Text>
+//                 {isEditing
+//                     ? <TextInput style={styles.input} value={lastName} onChangeText={setLastName} />
+//                     : <Text style={styles.value}>{profile.lastname}</Text>}
+//             </View>
+
+//             <View style={styles.field}>
+//                 <Text style={styles.label}>เพศ</Text>
+//                 {isEditing ? (
+//                     <View style={styles.pickerWrapper}>
+//                         <Picker selectedValue={gender} onValueChange={setGender}
+//                             style={styles.picker} dropdownIconColor="#666">
+//                             <Picker.Item label="เลือกเพศ" value="" />
+//                             <Picker.Item label="ชาย" value="ชาย" />
+//                             <Picker.Item label="หญิง" value="หญิง" />
+//                             <Picker.Item label="อื่นๆ" value="อื่นๆ" />
+//                         </Picker>
+//                     </View>
+//                 ) : <Text style={styles.value}>{profile.gender}</Text>}
+//             </View>
+
+//             <View style={styles.field}>
+//                 <Text style={styles.label}>วัน/เดือน/ปีเกิด</Text>
+//                 <Text style={styles.value}>{birthText}</Text>
+//             </View>
+
+//             <View style={styles.field}>
+//                 <Text style={styles.label}>เลขบัตรประชาชน</Text>
+//                 <Text style={styles.value}>{maskIdCard(idcard)}</Text>
+//             </View>
+
+//             <View style={styles.field}>
+//                 <Text style={styles.label}>เบอร์โทรศัพท์</Text>
+//                 {isEditing
+//                     ? <TextInput style={styles.input} value={phone} onChangeText={setPhone}
+//                         keyboardType="phone-pad" maxLength={10} />
+//                     : <Text style={styles.value}>{profile.phone}</Text>}
+//             </View>
+
+//             {isEditing ? (
+//                 <View style={styles.buttonRow}>
+//                     <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={saving}>
+//                         <Text style={styles.cancelText}>ยกเลิก</Text>
+//                     </TouchableOpacity>
+//                     <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
+//                         {saving
+//                             ? <ActivityIndicator color="#fff" />
+//                             : <Text style={styles.buttonText}>บันทึก</Text>}
+//                     </TouchableOpacity>
+//                 </View>
+//             ) : (
+//                 <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
+//                     <Text style={styles.buttonText}>แก้ไขข้อมูล</Text>
+//                 </TouchableOpacity>
+//             )}
+//         </ScrollView>
+//     );
+// };
 
 import React, { useEffect, useState } from "react";
 import {
@@ -229,8 +418,28 @@ import { useUser } from "../context/UserContext";
 import { updateUserProfile, getUserPrivate } from "../services/userService";
 import { uploadImage } from "../services/cloudinaryService";
 
+const NAME_REGEX = /^[ก-๙a-zA-Z\s]{2,30}$/;
+const PHONE_REGEX = /^0[689]\d{8}$/;
+
 const maskIdCard = (id) =>
-    id && id.length === 13 ? `${id[0]}-xxxx-xxxxx-${id.slice(10, 12)}-${id[12]}` : "-";
+    id?.length === 13 ? `${id[0]}-xxxx-xxxxx-${id.slice(10, 12)}-${id[12]}` : "-";
+
+// กล่องแต่ละช่อง: ชื่อหัวข้อ + เนื้อหา
+const Field = ({ label, children }) => (
+    <View style={styles.field}>
+        <Text style={styles.label}>{label}</Text>
+        {children}
+    </View>
+);
+
+// ช่องที่ตอนดูเป็นข้อความ ตอนแก้ไขเป็นช่องพิมพ์
+const TextField = ({ label, editing, display, ...inputProps }) => (
+    <Field label={label}>
+        {editing
+            ? <TextInput style={styles.input} {...inputProps} />
+            : <Text style={styles.value}>{display}</Text>}
+    </Field>
+);
 
 const ProfileScreen = () => {
     const { authUser, profile } = useUser();
@@ -239,22 +448,9 @@ const ProfileScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [idcard, setIdcard] = useState("");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [phone, setPhone] = useState("");
-    const [gender, setGender] = useState("");
+    const [form, setForm] = useState({ firstname: "", lastname: "", gender: "", phone: "" });
 
-    const fillForm = (p) => {
-        setFirstName(p.firstname || "");
-        setLastName(p.lastname || "");
-        setPhone(p.phone || "");
-        setGender(p.gender || "");
-    };
-
-    // ซิงก์ฟอร์มกับข้อมูลจริง (เฉพาะตอนไม่ได้กำลังแก้ไข)
-    useEffect(() => {
-        if (profile && !isEditing) fillForm(profile);
-    }, [profile, isEditing]);
+    const setField = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }));
 
     // เลขบัตรดึงเฉพาะหน้านี้ ไม่เก็บใน context
     useEffect(() => {
@@ -263,31 +459,38 @@ const ProfileScreen = () => {
 
     if (!profile) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
 
+    const startEdit = () => {
+        setForm({
+            firstname: profile.firstname || "",
+            lastname: profile.lastname || "",
+            gender: profile.gender || "",
+            phone: profile.phone || "",
+        });
+        setIsEditing(true);
+    };
+
     const handleSave = async () => {
-        const fn = firstName.trim();
-        const ln = lastName.trim();
-        if (!/^[ก-๙a-zA-Z\s]{2,30}$/.test(fn) || !/^[ก-๙a-zA-Z\s]{2,30}$/.test(ln)) {
+        const firstname = form.firstname.trim();
+        const lastname = form.lastname.trim();
+        const { gender, phone } = form;
+
+        if (!NAME_REGEX.test(firstname) || !NAME_REGEX.test(lastname)) {
             return Alert.alert("ข้อมูลไม่ถูกต้อง", "ชื่อและนามสกุลต้องเป็นตัวอักษรไทยหรืออังกฤษ 2-30 ตัว");
         }
         if (!gender) return Alert.alert("ข้อมูลไม่ถูกต้อง", "กรุณาเลือกเพศ");
-        if (!/^0[689]\d{8}$/.test(phone)) {
+        if (!PHONE_REGEX.test(phone)) {
             return Alert.alert("ข้อมูลไม่ถูกต้อง", "เบอร์โทรต้องเป็นเบอร์มือถือ 10 หลัก");
         }
 
         setSaving(true);
         try {
-            await updateUserProfile(uid, { firstname: fn, lastname: ln, gender, phone });
+            await updateUserProfile(uid, { firstname, lastname, gender, phone });
             setIsEditing(false);
         } catch {
             Alert.alert("ผิดพลาด", "บันทึกไม่สำเร็จ กรุณาลองใหม่");
         } finally {
             setSaving(false);
         }
-    };
-
-    const handleCancel = () => {
-        fillForm(profile);
-        setIsEditing(false);
     };
 
     const handleChangeProfileImage = async () => {
@@ -304,15 +507,11 @@ const ProfileScreen = () => {
         });
         if (result.canceled) return;
 
-        const uri = result.assets?.[0]?.uri;
-        if (!uri) return Alert.alert("ผิดพลาด", "ไม่พบไฟล์รูปภาพ");
-
         setSaving(true);
         try {
-            const { url, publicId } = await uploadImage(uri, `profiles/${uid}`);
+            const { url, publicId } = await uploadImage(result.assets[0].uri, `profiles/${uid}`);
             await updateUserProfile(uid, { photoURL: url, photoPublicId: publicId });
         } catch (error) {
-            console.error("Upload profile image error:", error);
             Alert.alert("ผิดพลาด", error?.message || "อัปโหลดรูปไม่สำเร็จ");
         } finally {
             setSaving(false);
@@ -325,7 +524,6 @@ const ProfileScreen = () => {
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.title}>ข้อมูลส่วนตัว</Text>
 
             <View style={styles.profileSection}>
                 <Image
@@ -339,25 +537,15 @@ const ProfileScreen = () => {
                 )}
             </View>
 
-            <View style={styles.field}>
-                <Text style={styles.label}>ชื่อ</Text>
-                {isEditing
-                    ? <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} />
-                    : <Text style={styles.value}>{profile.firstname}</Text>}
-            </View>
+            <TextField label="ชื่อ" editing={isEditing} display={profile.firstname}
+                value={form.firstname} onChangeText={setField("firstname")} />
+            <TextField label="นามสกุล" editing={isEditing} display={profile.lastname}
+                value={form.lastname} onChangeText={setField("lastname")} />
 
-            <View style={styles.field}>
-                <Text style={styles.label}>นามสกุล</Text>
-                {isEditing
-                    ? <TextInput style={styles.input} value={lastName} onChangeText={setLastName} />
-                    : <Text style={styles.value}>{profile.lastname}</Text>}
-            </View>
-
-            <View style={styles.field}>
-                <Text style={styles.label}>เพศ</Text>
+            <Field label="เพศ">
                 {isEditing ? (
                     <View style={styles.pickerWrapper}>
-                        <Picker selectedValue={gender} onValueChange={setGender}
+                        <Picker selectedValue={form.gender} onValueChange={setField("gender")}
                             style={styles.picker} dropdownIconColor="#666">
                             <Picker.Item label="เลือกเพศ" value="" />
                             <Picker.Item label="ชาย" value="ชาย" />
@@ -366,29 +554,22 @@ const ProfileScreen = () => {
                         </Picker>
                     </View>
                 ) : <Text style={styles.value}>{profile.gender}</Text>}
-            </View>
+            </Field>
 
-            <View style={styles.field}>
-                <Text style={styles.label}>วัน/เดือน/ปีเกิด</Text>
+            <Field label="วัน/เดือน/ปีเกิด">
                 <Text style={styles.value}>{birthText}</Text>
-            </View>
-
-            <View style={styles.field}>
-                <Text style={styles.label}>เลขบัตรประชาชน</Text>
+            </Field>
+            <Field label="เลขบัตรประชาชน">
                 <Text style={styles.value}>{maskIdCard(idcard)}</Text>
-            </View>
+            </Field>
 
-            <View style={styles.field}>
-                <Text style={styles.label}>เบอร์โทรศัพท์</Text>
-                {isEditing
-                    ? <TextInput style={styles.input} value={phone} onChangeText={setPhone}
-                        keyboardType="phone-pad" maxLength={10} />
-                    : <Text style={styles.value}>{profile.phone}</Text>}
-            </View>
+            <TextField label="เบอร์โทรศัพท์" editing={isEditing} display={profile.phone}
+                value={form.phone} onChangeText={setField("phone")}
+                keyboardType="phone-pad" maxLength={10} />
 
             {isEditing ? (
                 <View style={styles.buttonRow}>
-                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={saving}>
+                    <TouchableOpacity style={styles.cancelButton} onPress={() => setIsEditing(false)} disabled={saving}>
                         <Text style={styles.cancelText}>ยกเลิก</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
@@ -398,7 +579,7 @@ const ProfileScreen = () => {
                     </TouchableOpacity>
                 </View>
             ) : (
-                <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
+                <TouchableOpacity style={styles.editButton} onPress={startEdit}>
                     <Text style={styles.buttonText}>แก้ไขข้อมูล</Text>
                 </TouchableOpacity>
             )}
@@ -411,11 +592,6 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         backgroundColor: "#f5f5f5",
-    },
-    title: {
-        fontSize: 22,
-        fontWeight: "bold",
-        marginBottom: 20,
     },
 
     profileSection: {
