@@ -71,8 +71,11 @@ const HomeScreen = ({ navigation }) => {
                         color="red"
                         size={21}
                     />
-                    <View style={{ marginLeft: 8 }}>
+                    <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between" }}>
                         <Text style={styles.locationText}>ตำแหน่งปัจจุบันของคุณ</Text>
+                        <TouchableOpacity onPress={getLocation}>
+                            <MaterialIcons name="edit-location-alt" size={20} color="black" />
+                        </TouchableOpacity>
                     </View>
 
                 </View>
@@ -128,7 +131,7 @@ const HomeScreen = ({ navigation }) => {
                     size={28}
                 />
                 <Text style={styles.callText}>โทร 1669 สายด่วนฉุกเฉิน</Text>
-            </TouchableOpacity> 
+            </TouchableOpacity>
 
 
         </ScrollView>
@@ -180,6 +183,8 @@ const styles = StyleSheet.create({
     locationText: {
         fontSize: 16,
         color: '#888',
+        alignSelf: "center",
+        marginLeft: 5,
     },
     address: {
         fontWeight: "bold",

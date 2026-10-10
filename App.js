@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { onAuthStateChanged } from "firebase/auth";
-import { PaperProvider } from 'react-native-paper';
-import { auth } from "./src/firebase/config";
+import { ActivityIndicator } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { PaperProvider } from "react-native-paper";
+import { UserProvider, useUser } from "./src/context/UserContext";
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -16,39 +14,24 @@ import HeaderHomeMenu from './src/components/HeaderHomeMenu';
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
-  const [user, setUser] = useState(null);
-  const [initializing, setInitializing] = useState(true);
+function Root() {
+  const { authUser, initializing } = useUser();
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setInitializing(false);
-    });
-    return unsub;
-  }, []);
-
-  if (initializing) return <View style={{ flex: 1, justifyContent: "center" }}><ActivityIndicator size="large" /></View>;
+  if (initializing) {
+    return <ActivityIndicator style={{ flex: 1 }} size="large" />;
+  }
 
   return (
-    <PaperProvider>
     <NavigationContainer>
       <Stack.Navigator screenOptions={{
-        headerStyle: { backgroundColor: '#f21212' },
-        headerTintColor: '#fff', 
-        headerTitleStyle: { fontWeight: 'bold' }
+        headerStyle: { backgroundColor: "#f21212" },
+        headerTintColor: "#fff",
+        headerTitleStyle: { fontWeight: "bold" },
       }}>
-
-        {user ? (
+        {authUser ? (
           <>
-            <Stack.Screen
-              name='Home'
-              component={HomeScreen}
-              options={({ navigation }) => ({
-                title: 'KPS Ambulance',
-                headerRight: () => <HeaderHomeMenu/>,
-              })}
-            />
+            <Stack.Screen name="Home" component={HomeScreen}
+              options={{ title: "KPS Ambulance", headerRight: () => <HeaderHomeMenu /> }} />
             <Stack.Screen name="Report" component={ReportScreen} options={{ title: "แจ้งเหตุฉุกเฉิน" }} />
             <Stack.Screen name="Status" component={StatusScreen} options={{ title: "สถานะการช่วยเหลือ" }} />
             <Stack.Screen name="AEDMap" component={AEDMapScreen} options={{ title: "แผนที่ AED" }} />
@@ -62,45 +45,65 @@ export default function App() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <PaperProvider>
+      <UserProvider>
+        <Root />
+      </UserProvider>
     </PaperProvider>
   );
 }
 
 // export default function App() {
+//   const [user, setUser] = useState(null);
+//   const [initializing, setInitializing] = useState(true);
+
+//   useEffect(() => {
+//     const unsub = onAuthStateChanged(auth, (currentUser) => {
+//       setUser(currentUser);
+//       setInitializing(false);
+//     });
+//     return unsub;
+//   }, []);
+
+//   if (initializing) return <View style={{ flex: 1, justifyContent: "center" }}><ActivityIndicator size="large" /></View>;
 
 //   return (
+//     <PaperProvider>
 //     <NavigationContainer>
 //       <Stack.Navigator screenOptions={{
 //         headerStyle: { backgroundColor: '#f21212' },
-//         headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold' }
+//         headerTintColor: '#fff', 
+//         headerTitleStyle: { fontWeight: 'bold' }
 //       }}>
 
-//         {/* <Stack.Screen name='Profile' component={ProfileScreen} options={{ title: '' }} /> */}
-//         <Stack.Screen name='Login' component={LoginScreen} options={{ title: '' }} />
-//         <Stack.Screen name='Register' component={RegisterScreen} options={{ title: '' }} />
-//         <Stack.Screen
-//           name='Home'
-//           component={HomeScreen}
-//           options={{
-//             title: 'KPS Ambulance',
-//             headerRight: () => (
-//               <TouchableOpacity
-//                 onPress={() => { }}
-//                 style={{ marginRight: 15 }}
-//               >
-//                 <Text style={{ color: "#fff", fontSize: 28 }}>
-//                   ☰
-//                 </Text>
-//               </TouchableOpacity>
-//             ),
-//           }} />
-//         <Stack.Screen name='Report' component={ReportScreen} options={{ title: 'แจ้งเหตุฉุกเฉิน' }} />
-//         <Stack.Screen name='Status' component={StatusScreen} options={{ title: 'สถานะการช่วยเหลือ' }} />
-//         <Stack.Screen name='AEDMap' component={AEDMapScreen} options={{ title: 'แผนที่ AED' }} />
-
+//         {user ? (
+//           <>
+//             <Stack.Screen
+//               name='Home'
+//               component={HomeScreen}
+//               options={({ navigation }) => ({
+//                 title: 'KPS Ambulance',
+//                 headerRight: () => <HeaderHomeMenu/>,
+//               })}
+//             />
+//             <Stack.Screen name="Report" component={ReportScreen} options={{ title: "แจ้งเหตุฉุกเฉิน" }} />
+//             <Stack.Screen name="Status" component={StatusScreen} options={{ title: "สถานะการช่วยเหลือ" }} />
+//             <Stack.Screen name="AEDMap" component={AEDMapScreen} options={{ title: "แผนที่ AED" }} />
+//             <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: "ข้อมูลส่วนตัว" }} />
+//           </>
+//         ) : (
+//           <>
+//             <Stack.Screen name="Login" component={LoginScreen} options={{ title: "" }} />
+//             <Stack.Screen name="Register" component={RegisterScreen} options={{ title: "" }} />
+//           </>
+//         )}
 //       </Stack.Navigator>
 //     </NavigationContainer>
+//     </PaperProvider>
 //   );
 // }
-
-

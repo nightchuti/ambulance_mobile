@@ -1,0 +1,43 @@
+import {
+  doc, getDoc, updateDoc, onSnapshot, serverTimestamp, writeBatch,
+} from "firebase/firestore";
+import { db } from "../firebase/config";
+
+const userRef = (uid) => doc(db, "users", uid);
+const privateRef = (uid) => doc(db, "users_private", uid);
+
+// สมัคร: เขียน 2 collection พร้อมกัน (สำเร็จทั้งคู่หรือล้มทั้งคู่)
+export const createUserProfile = async (uid, { idcard, ...profile }) => {
+  const batch = writeBatch(db);
+  batch.set(userRef(uid), {
+    ...profile,
+    photoURL: null,
+    photoPublicId: null,
+    consent: true,
+    consentAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  batch.set(privateRef(uid), { idcard, createdAt: serverTimestamp() });
+  await batch.commit();
+};
+
+export const getUserProfile = async (uid) => {
+  const snap = await getDoc(userRef(uid));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+};
+
+export const getUserPrivate = async (uid) => {
+  const snap = await getDoc(privateRef(uid));
+  return snap.exists() ? snap.data() : null;
+};
+
+export const updateUserProfile = (uid, data) =>
+  updateDoc(userRef(uid), { ...data, updatedAt: serverTimestamp() });
+
+export const subscribeUserProfile = (uid, onData, onError) =>
+  onSnapshot(
+    userRef(uid),
+    (snap) => onData(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+    onError
+  );

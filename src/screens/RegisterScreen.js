@@ -4,8 +4,8 @@ import TextFormInput from "../components/TextFormInput";
 import SelectFormInput from "../components/SelectFormInput";
 import DateFormInput from "../components/DateFormInput";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "../firebase/config";
+import { auth } from "../firebase/config";
+import { createUserProfile } from "../services/userService";
 
 const RegisterScreen = ({ navigation }) => {
 
@@ -124,22 +124,20 @@ const RegisterScreen = ({ navigation }) => {
         setLoading(true);
         let newUser = null;
         try {
+
             const result = await createUserWithEmailAndPassword(auth, cleanEmail, password);
             newUser = result.user;
 
-            await setDoc(doc(db, "users", newUser.uid), {
+            await createUserProfile(newUser.uid, {
                 firstname: cleanFirstname,
                 lastname: cleanLastname,
-                gender: gender,
+                gender,
                 birthDate: birthDate.toISOString(),
-                idcard: idcard,
                 phone: number,
                 email: cleanEmail,
-                consent: true,
-                consentAt: serverTimestamp(),
-                createdAt: serverTimestamp(),
+                idcard,
             });
-            navigation.replace("Home")
+
         } catch (error) {
             if (newUser) {
                 try { await deleteUser(newUser); } catch (e) { }

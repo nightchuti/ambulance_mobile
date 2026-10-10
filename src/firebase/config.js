@@ -7,6 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const firebaseConfig = {
   apiKey: "AIzaSyCy0B8aBsn7v8ZlrTfPOwUEPBVrv8ChNhc",
   authDomain: "kps-ambulance-5308f.firebaseapp.com",
+  databaseURL: "https://kps-ambulance-5308f-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "kps-ambulance-5308f",
   storageBucket: "kps-ambulance-5308f.firebasestorage.app",
   messagingSenderId: "911722332967",
