@@ -195,6 +195,7 @@ const RegisterScreen = ({ navigation }) => {
                             />
                         </View>
                     </View>
+                    <View style={{ marginHorizontal: 12 }}>
                     <SelectFormInput
                         label="เพศ"
                         value={gender}
@@ -203,6 +204,7 @@ const RegisterScreen = ({ navigation }) => {
                         options={["ชาย", "หญิง", "อื่นๆ"]}
                         error={formErrors.gender}
                     />
+                    </View>
                     <DateFormInput
                         label="วันเกิด"
                         placeholder="กรอกวัน/เดือน/ปี (ค.ศ.)"

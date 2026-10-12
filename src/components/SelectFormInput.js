@@ -7,7 +7,7 @@ const SelectFormDropdown = ({ label, value, onValueChange, placeholder, options 
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.cardTitle}>{label}</Text>
+      {label ? <Text style={styles.cardTitle}>{label}</Text> : null}
 
       <Dropdown
         style={[styles.dropdown, error && styles.dropdownError]}
@@ -31,7 +31,6 @@ const SelectFormDropdown = ({ label, value, onValueChange, placeholder, options 
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginHorizontal: 12,
     gap: 8
   },
   cardTitle: {

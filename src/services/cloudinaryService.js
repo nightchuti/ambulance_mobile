@@ -5,8 +5,6 @@ const UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_PRESET;
 const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 export const uploadImage = async (uri, folder = "misc") => {
-  if (!uri) throw new Error("ไม่พบไฟล์รูปภาพ");
-
   const body = new FormData();
   body.append("file", new File(uri));
   body.append("upload_preset", UPLOAD_PRESET);

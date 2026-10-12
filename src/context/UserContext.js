@@ -11,7 +11,7 @@ export const UserProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [initializing, setInitializing] = useState(true);
 
-  // 1) ติดตามสถานะล็อกอิน
+  //ติดตามสถานะล็อกอิน
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
       setAuthUser(user);
@@ -19,7 +19,7 @@ export const UserProvider = ({ children }) => {
     });
   }, []);
 
-  // 2) ล็อกอินแล้วค่อยฟังโปรไฟล์ / ออกจากระบบแล้วล้างโปรไฟล์
+  //แสดงโปรไฟล์ จะถูกเรียกเมื่อข้อมูลเปลี่ยน
   useEffect(() => {
     if (!authUser) {
       setProfile(null);

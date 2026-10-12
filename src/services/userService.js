@@ -1,12 +1,9 @@
-import {
-  doc, getDoc, updateDoc, onSnapshot, serverTimestamp, writeBatch,
-} from "firebase/firestore";
+import { doc, getDoc, updateDoc, onSnapshot, serverTimestamp, writeBatch, } from "firebase/firestore";
 import { db } from "../firebase/config";
 
 const userRef = (uid) => doc(db, "users", uid);
 const privateRef = (uid) => doc(db, "users_private", uid);
 
-// สมัคร: เขียน 2 collection พร้อมกัน (สำเร็จทั้งคู่หรือล้มทั้งคู่)
 export const createUserProfile = async (uid, { idcard, ...profile }) => {
   const batch = writeBatch(db);
   batch.set(userRef(uid), {
@@ -22,6 +19,7 @@ export const createUserProfile = async (uid, { idcard, ...profile }) => {
   await batch.commit();
 };
 
+//เหมือนยังไม่ได้ใช้
 export const getUserProfile = async (uid) => {
   const snap = await getDoc(userRef(uid));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
