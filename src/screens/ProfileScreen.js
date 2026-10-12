@@ -5,6 +5,7 @@ import SelectFormInput from "../components/SelectFormInput";
 import { useUser } from "../context/UserContext";
 import { updateUserProfile, getUserPrivate } from "../services/userService";
 import { uploadImage } from "../services/cloudinaryService";
+import { Ionicons } from "@expo/vector-icons";
 
 const NAME_REGEX = /^[ก-๙a-zA-Z\s]{2,30}$/;
 const PHONE_REGEX = /^0[689]\d{8}$/;
@@ -113,10 +114,14 @@ const ProfileScreen = () => {
         <ScrollView style={styles.container}>
 
             <View style={styles.profileSection}>
-                <Image
-                    source={profile.photoURL ? { uri: profile.photoURL } : require("../../assets/logo.png")}
-                    style={styles.profileImage}
-                />
+                {profile.photoURL ? (
+                    <Image source={{ uri: profile.photoURL }} style={styles.profileImage} />
+                ) : (
+                    <View style={[styles.profileImage, styles.profilePlaceholder]}>
+                        <Ionicons name="person" size={56} color="#ddd" />
+                    </View>
+                )}
+
                 {isEditing && (
                     <TouchableOpacity onPress={handleChangeProfileImage} disabled={saving}>
                         <Text style={styles.changeImageText}>เปลี่ยนรูปโปรไฟล์</Text>
@@ -191,6 +196,11 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderWidth: 2,
         borderColor: "#ccc",
+    },
+    profilePlaceholder: {
+        backgroundColor: "#fff",
+        alignItems: "center",
+        justifyContent: "center",
     },
     changeImageText: {
         color: "#1E90FF",
