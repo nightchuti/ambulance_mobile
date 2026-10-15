@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { PaperProvider } from "react-native-paper";
 import { UserProvider, useUser } from "./src/context/UserContext";
+import { LocationProvider } from "./src/context/LocationContext";
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -11,6 +12,8 @@ import AEDMapScreen from './src/screens/AEDMapScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import StatusScreen from './src/screens/StatusScreen';
 import HeaderHomeMenu from './src/components/HeaderHomeMenu';
+import HistoryScreen from './src/screens/HistoryScreen';
+import PickLocationScreen from './src/screens/PickLocationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +39,8 @@ function Root() {
             <Stack.Screen name="Status" component={StatusScreen} options={{ title: "สถานะการช่วยเหลือ" }} />
             <Stack.Screen name="AEDMap" component={AEDMapScreen} options={{ title: "แผนที่ AED" }} />
             <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: "ข้อมูลส่วนตัว" }} />
+            <Stack.Screen name="History" component={HistoryScreen} options={{ title: "ประวัติการใช้งาน" }} />
+            <Stack.Screen name="PickLocation" component={PickLocationScreen} options={{ title: "เลือกตำแหน่ง" }} />
           </>
         ) : (
           <>
@@ -52,7 +57,9 @@ export default function App() {
   return (
     <PaperProvider>
       <UserProvider>
-        <Root />
+        <LocationProvider>
+          <Root />
+        </LocationProvider>
       </UserProvider>
     </PaperProvider>
   );
