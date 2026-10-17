@@ -56,3 +56,13 @@ export const STATUS_FLOW = ["pending", "accepted", "on_the_way", "arrived", "com
 
 export const formatDateTime = (ts) =>
   ts?.toDate ? ts.toDate().toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }) : "-";
+
+// เหตุที่ยังไม่จบ = ยังกลับไปดูสถานะได้
+export const isActiveStatus = (s) => s !== STATUS.COMPLETED && s !== STATUS.CANCELLED;
+
+// "26 ก.ค. 14:51"
+export const formatShortTime = (ts) =>
+  ts?.toDate
+    ? ts.toDate().toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    : "";
+    
