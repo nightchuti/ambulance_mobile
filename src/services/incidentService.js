@@ -3,6 +3,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { STATUS } from "../constants/incident";
+import { updateDoc } from "firebase/firestore";
 
 export const newIncidentId = () => doc(collection(db, "incidents")).id;
 
@@ -80,3 +81,7 @@ export const cancelIncident = async (id) => {
   });
   await batch.commit();
 };
+
+// ซ่อนประวัติ (ไม่ลบเอกสารจริง)
+export const hideIncident = (id) =>
+  updateDoc(doc(db, "incidents", id), { hiddenByUser: true, updatedAt: serverTimestamp() });

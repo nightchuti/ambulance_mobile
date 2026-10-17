@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, A
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocation } from "../context/LocationContext";
 import { useUser } from "../context/UserContext";
-import { createIncident, subscribeMyIncidents } from "../services/incidentService";
+import { createIncident, subscribeMyIncidents, newIncidentId } from "../services/incidentService";
 import { INCIDENT_TYPES, SOS_TYPE, INCIDENT_MODE, isActiveStatus, getTypeInfo } from "../constants/incident";
 import LocationEditButton from "../components/LocationEditButton";
 
@@ -60,6 +60,7 @@ const HomeScreen = ({ navigation }) => {
                         setSending(true);
                         try {
                             const id = await createIncident({
+                                id: newIncidentId(),
                                 uid: authUser.uid, profile,
                                 mode: INCIDENT_MODE.QUICK,
                                 type: SOS_TYPE.key,
@@ -175,9 +176,10 @@ const styles = StyleSheet.create({
         flex: 1,
         width: "100%",
         backgroundColor: '#eeeeee',
+        marginBottom: 20,
     },
     sosSection: {
-        height: 260,
+        height: 240,
         backgroundColor: "#1E213B",
         borderBottomLeftRadius: 40,
         borderBottomRightRadius: 40,
