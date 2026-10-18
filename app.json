@@ -10,6 +10,12 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.kps.ambulance",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDQyG3sPE6kspQV0DhniT2_NhjendgXVEc"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

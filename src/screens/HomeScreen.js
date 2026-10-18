@@ -6,6 +6,7 @@ import { useUser } from "../context/UserContext";
 import { createIncident, subscribeMyIncidents, newIncidentId } from "../services/incidentService";
 import { INCIDENT_TYPES, SOS_TYPE, INCIDENT_MODE, isActiveStatus, getTypeInfo } from "../constants/incident";
 import LocationEditButton from "../components/LocationEditButton";
+import { subscribeAEDs, distanceMeters } from "../services/aedService";
 
 const HomeScreen = ({ navigation }) => {
 
@@ -13,6 +14,19 @@ const HomeScreen = ({ navigation }) => {
     const { authUser, profile } = useUser();
     const [sending, setSending] = useState(false);
     const [myIncidents, setMyIncidents] = useState([]);
+    const [aeds, setAeds] = React.useState([]);
+
+    useEffect(
+        () => subscribeAEDs(setAeds, (e) => console.warn(e)), []
+    );
+
+    // หา AED ที่ใกล้ที่สุด
+    let nearestAED = null;
+    if (location && aeds.length > 0) {
+        nearestAED = aeds
+            .map((a) => ({ ...a, distance: distanceMeters(location.latitude, location.longitude, a.latitude, a.longitude) }))
+            .sort((a, b) => a.distance - b.distance)[0];
+    }
 
     //ดูว่ามีเหตุอยู่ไหม   
     useEffect(
@@ -23,7 +37,7 @@ const HomeScreen = ({ navigation }) => {
 
     const openActive = () => navigation.navigate("Status", { incidentId: activeIncident.id });
 
-    const blockIfActive = () =>  {
+    const blockIfActive = () => {
         if (!activeIncident) return false;
         Alert.alert("มีเหตุที่กำลังดำเนินการอยู่", "ต้องการดูสถานะเหตุเดิมหรือไม่?", [
             { text: "ปิด", style: "cancel" },
@@ -121,13 +135,28 @@ const HomeScreen = ({ navigation }) => {
                 )}
             </View>
 
-            <TouchableOpacity style={styles.aedCard}>
+            {/* <TouchableOpacity style={styles.aedCard}>
                 <View style={styles.aedIcon}>
                     <MaterialIcons name="favorite" size={25} color="#F59E0B" />
                 </View>
                 <View style={{ flex: 1, marginLeft: 15 }}>
                     <Text style={styles.aedTitle}>AED ที่ใกล้ที่สุด</Text>
                     <Text style={styles.aedSub}>กองบริหารกิจการนิสิต</Text>
+                </View>
+                <MaterialIcons name="chevron-right" size={30} color="#C97B00" />
+            </TouchableOpacity> */}
+
+            <TouchableOpacity style={styles.aedCard} onPress={() => navigation.navigate("AEDMap")}>
+                <View style={styles.aedIcon}>
+                    <MaterialIcons name="favorite" size={25} color="#F59E0B" />
+                </View>
+                <View style={{ flex: 1, marginLeft: 15 }}>
+                    <Text style={styles.aedTitle}>AED ที่ใกล้ที่สุด</Text>
+                    <Text style={styles.aedSub} numberOfLines={1}>
+                        {nearestAED
+                            ? `${nearestAED.name} (${nearestAED.distance < 1000 ? Math.round(nearestAED.distance) + " ม." : (nearestAED.distance / 1000).toFixed(1) + " กม."})`
+                            : "แตะเพื่อดูแผนที่ AED"}
+                    </Text>
                 </View>
                 <MaterialIcons name="chevron-right" size={30} color="#C97B00" />
             </TouchableOpacity>
