@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, ActivityIndicator } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocation } from "../context/LocationContext";
@@ -9,24 +9,21 @@ import LocationEditButton from "../components/LocationEditButton";
 
 const HomeScreen = ({ navigation }) => {
 
-    const { location, address, addressDetail, source, loading, refresh } = useLocation();
+    const { location, address, addressDetail, source } = useLocation();
     const { authUser, profile } = useUser();
-    const [sending, setSending] = React.useState(false);
+    const [sending, setSending] = useState(false);
+    const [myIncidents, setMyIncidents] = useState([]);
 
-    const [myIncidents, setMyIncidents] = React.useState([]);
-
-    React.useEffect(
+    //ดูว่ามีเหตุอยู่ไหม   
+    useEffect(
         () => subscribeMyIncidents(authUser.uid, setMyIncidents, (e) => console.warn(e)),
         [authUser.uid]
     );
-
-    // เหตุล่าสุดที่ยังไม่จบ (รายการเรียง createdAt desc อยู่แล้ว)
     const activeIncident = myIncidents.find((i) => isActiveStatus(i.status));
 
     const openActive = () => navigation.navigate("Status", { incidentId: activeIncident.id });
 
-    // ถ้ามีเหตุค้างอยู่ ให้เด้งถามก่อน ไม่ให้แจ้งซ้ำโดยไม่ตั้งใจ
-    const blockIfActive = () => {
+    const blockIfActive = () =>  {
         if (!activeIncident) return false;
         Alert.alert("มีเหตุที่กำลังดำเนินการอยู่", "ต้องการดูสถานะเหตุเดิมหรือไม่?", [
             { text: "ปิด", style: "cancel" },
@@ -43,7 +40,7 @@ const HomeScreen = ({ navigation }) => {
         return true;
     };
 
-    // แบบด่วน: กดแล้วยืนยัน -> บันทึกทันที
+    //แจ้งแบบด่วน
     const handleSOS = () => {
         if (sending || blockIfActive() || !ensureReady()) return;
         if (!profile) return Alert.alert("กรุณารอสักครู่", "กำลังโหลดข้อมูลผู้ใช้");
@@ -80,7 +77,7 @@ const HomeScreen = ({ navigation }) => {
         );
     };
 
-    // แบบเลือกประเภท: ไปหน้ากรอกรายละเอียด
+    //แจ้งแบบเลือกประเภท
     const goToReport = (typeKey) => {
         if (blockIfActive() || !ensureReady()) return;
         navigation.navigate("Report", { type: typeKey });
@@ -112,12 +109,9 @@ const HomeScreen = ({ navigation }) => {
             )}
 
             <View style={styles.locationSection}>
-                <View style={{ flexDirection: "row" }}>
-                    {/* <MaterialIcons name="location-on" color="red" size={21} /> */}
-                    <View style={{ flex: 1, flexDirection: "row", justifyContent: "space-between" }}>
-                        <Text style={styles.locationText}>ตำแหน่งปัจจุบันของคุณ</Text>
-                        <LocationEditButton onPress={() => navigation.navigate("PickLocation")} />
-                    </View>
+                <View style={styles.locationHeader}>
+                    <Text style={styles.locationText}>ตำแหน่งปัจจุบันของคุณ</Text>
+                    <LocationEditButton onPress={() => navigation.navigate("PickLocation")} />
                 </View>
                 <Text style={styles.address}>{address}</Text>
                 {location && (
@@ -129,21 +123,13 @@ const HomeScreen = ({ navigation }) => {
 
             <TouchableOpacity style={styles.aedCard}>
                 <View style={styles.aedIcon}>
-                    <MaterialIcons
-                        name="favorite"
-                        size={25}
-                        color="#F59E0B"
-                    />
+                    <MaterialIcons name="favorite" size={25} color="#F59E0B" />
                 </View>
                 <View style={{ flex: 1, marginLeft: 15 }}>
                     <Text style={styles.aedTitle}>AED ที่ใกล้ที่สุด</Text>
                     <Text style={styles.aedSub}>กองบริหารกิจการนิสิต</Text>
                 </View>
-                <MaterialIcons
-                    name="chevron-right"
-                    size={30}
-                    color="#C97B00"
-                />
+                <MaterialIcons name="chevron-right" size={30} color="#C97B00" />
             </TouchableOpacity>
 
             <Text style={styles.type}>เลือกประเภทเหตุฉุกเฉิน</Text>
@@ -178,6 +164,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#eeeeee',
         marginBottom: 20,
     },
+
     sosSection: {
         height: 240,
         backgroundColor: "#1E213B",
@@ -211,8 +198,16 @@ const styles = StyleSheet.create({
         backgroundColor: "#f21212", marginHorizontal: 20, marginTop: 15,
         padding: 14, borderRadius: 16, elevation: 4,
     },
-    activeTitle: { color: "#fff", fontSize: 15, fontWeight: "bold" },
-    activeSub: { color: "#fff", fontSize: 13, marginTop: 2 },
+    activeTitle: {
+        color: "#fff",
+        fontSize: 15,
+        fontWeight: "bold"
+    },
+    activeSub: {
+        color: "#fff",
+        fontSize: 13,
+        marginTop: 2
+    },
 
     locationSection: {
         backgroundColor: "#fff",
@@ -222,11 +217,14 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         elevation: 4
     },
+    locationHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between"
+    },
     locationText: {
         fontSize: 16,
         color: '#888',
         alignSelf: "center",
-        // marginLeft: 5,
     },
     address: {
         fontWeight: "bold",
@@ -247,6 +245,11 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 20
     },
+    aedIcon: {
+        padding: 5,
+        backgroundColor: "#ffd395",
+        borderRadius: 20
+    },
     aedTitle: {
         fontSize: 16,
         fontWeight: "bold",
@@ -255,11 +258,6 @@ const styles = StyleSheet.create({
     aedSub: {
         fontSize: 16,
         color: "#865108"
-    },
-    aedIcon: {
-        padding: 5,
-        backgroundColor: "#ffd395",
-        borderRadius: 20
     },
 
     type: {
@@ -305,6 +303,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginLeft: 10
     },
+
     call: {
         flexDirection: "row",
         backgroundColor: "#14B884",

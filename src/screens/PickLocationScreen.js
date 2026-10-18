@@ -5,7 +5,8 @@ import * as Location from "expo-location";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useLocation } from "../context/LocationContext";
 
-const FALLBACK = { latitude: 13.7563, longitude: 100.5018 };
+const FALLBACK = { latitude: 14.0239, longitude: 99.9752 };
+const DELTA = 0.003;
 
 const PickLocationScreen = ({ navigation }) => {
     const { location, setManualLocation } = useLocation();
@@ -17,7 +18,6 @@ const PickLocationScreen = ({ navigation }) => {
     const [locating, setLocating] = useState(false);
     const [busy, setBusy] = useState(false);
 
-    // ทุกครั้งที่หยุดเลื่อนแผนที่ ใช้จุดกลางจอเป็นตำแหน่งที่เลือก
     const handleRegionChange = async (region) => {
         const coords = { latitude: region.latitude, longitude: region.longitude };
         setPin(coords);
@@ -30,7 +30,6 @@ const PickLocationScreen = ({ navigation }) => {
         }
     };
 
-    // ปุ่ม locate: เลื่อนแผนที่ไปตำแหน่งปัจจุบัน (ยังไม่ยืนยัน)
     const goToMyLocation = async () => {
         setLocating(true);
         try {
@@ -40,7 +39,7 @@ const PickLocationScreen = ({ navigation }) => {
             }
             const p = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
             mapRef.current?.animateToRegion(
-                { latitude: p.coords.latitude, longitude: p.coords.longitude, latitudeDelta: 0.003, longitudeDelta: 0.003 },
+                { latitude: p.coords.latitude, longitude: p.coords.longitude, latitudeDelta: DELTA, longitudeDelta: DELTA },
                 500
             );
         } catch {
@@ -63,13 +62,13 @@ const PickLocationScreen = ({ navigation }) => {
                 <MapView
                     ref={mapRef}
                     style={StyleSheet.absoluteFill}
-                    initialRegion={{ ...pin, latitudeDelta: 0.003, longitudeDelta: 0.003 }}
+                    initialRegion={{ ...pin, latitudeDelta: DELTA, longitudeDelta: DELTA }}
                     onRegionChangeComplete={handleRegionChange}
                     showsUserLocation
                     showsMyLocationButton={false}
                 />
 
-                {/* หมุดค้างกลางจอ: ปลายหมุดอยู่ที่จุดกึ่งกลางแผนที่ */}
+                {/*หมุดอยู่ที่กลางแผนที่*/}
                 <View pointerEvents="none" style={styles.pinWrapper}>
                     <MaterialIcons name="location-pin" size={48} color="#f21212" />
                 </View>
@@ -93,28 +92,60 @@ const PickLocationScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    mapWrapper: { flex: 1 },
+    container: {
+        flex: 1
+    },
+    mapWrapper: {
+        flex: 1
+    },
     pinWrapper: {
         position: "absolute",
         top: "50%",
         left: "50%",
         marginLeft: -24,
-        marginTop: -48,      // ครึ่งหนึ่งของ size*2 เพื่อให้ปลายหมุดตรงกลางพอดี
+        marginTop: -48,
     },
     locateBtn: {
-        position: "absolute", right: 16, bottom: 16,
-        width: 48, height: 48, borderRadius: 24, backgroundColor: "#fff",
-        alignItems: "center", justifyContent: "center", elevation: 4,
+        position: "absolute",
+        right: 16,
+        bottom: 16,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: "#fff",
+        alignItems: "center",
+        justifyContent: "center",
+        elevation: 4,
     },
-    bottom: { padding: 16, backgroundColor: "#fff", gap: 10 },
-    hint: { textAlign: "center", color: "#64748B", fontSize: 13 },
+    bottom: {
+        padding: 16,
+        backgroundColor: "#fff",
+        gap: 10
+    },
+    hint: {
+        textAlign: "center",
+        color: "#64748B",
+        fontSize: 13
+    },
     address: {
-        backgroundColor: "#F8FAFC", borderRadius: 8, padding: 10,
-        borderWidth: 1, borderColor: "#E2E8F0", fontSize: 15,
+        backgroundColor: "#F8FAFC",
+        borderRadius: 8,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: "#E2E8F0",
+        fontSize: 15,
     },
-    confirmBtn: { backgroundColor: "#f21212", borderRadius: 10, paddingVertical: 14, alignItems: "center" },
-    confirmText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+    confirmBtn: {
+        backgroundColor: "#f21212",
+        borderRadius: 10,
+        paddingVertical: 14,
+        alignItems: "center"
+    },
+    confirmText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold"
+    },
 });
 
 export default PickLocationScreen;

@@ -3,10 +3,7 @@ import { View, Text, FlatList, ScrollView, TouchableOpacity, StyleSheet, Activit
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useUser } from "../context/UserContext";
 import { subscribeMyIncidents, hideIncident } from "../services/incidentService";
-import {
-    INCIDENT_TYPES, getTypeInfo, isActiveStatus,
-    STATUS_LABEL, STATUS_COLOR, formatDateTime,
-} from "../constants/incident";
+import { INCIDENT_TYPES, getTypeInfo, isActiveStatus, STATUS_LABEL, STATUS_COLOR, formatDateTime, } from "../constants/incident";
 
 const MAIN_FILTERS = [
     { key: "all", title: "ทั้งหมด" },
@@ -18,9 +15,8 @@ const HistoryScreen = ({ navigation }) => {
     const { authUser } = useUser();
     const [items, setItems] = useState(null);
     const [filter, setFilter] = useState("all");
-    const [typeFilter, setTypeFilter] = useState("all");
     const [selecting, setSelecting] = useState(false);
-    const [selected, setSelected] = useState([]);    // id ที่ติ๊กไว้
+    const [selected, setSelected] = useState([]);
 
     useEffect(() => {
         return subscribeMyIncidents(authUser.uid, setItems, (e) => {
@@ -35,7 +31,7 @@ const HistoryScreen = ({ navigation }) => {
         setSelected([]);
     };
 
-    // ปุ่มขวาบน: ถังขยะ / เสร็จ
+    //ปุ่มถังขยะขวาบน
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () =>
@@ -53,10 +49,10 @@ const HistoryScreen = ({ navigation }) => {
 
     const selectFilter = (key) => {
         setFilter(key);
-        setSelected([]);   // เปลี่ยนตัวกรองแล้วล้างรายการที่ติ๊กไว้
+        setSelected([]);
     };
 
-    // กดประเภทย่อยซ้ำ = กลับไปที่ "เหตุธรรมดา" ทั้งหมด
+    //กดประเภทย่อยซ้ำให้ไปที่เหตุธรรมดาทั้งหมด
     const selectSubType = (key) => selectFilter(filter === key ? "detailed" : key);
 
     const toggleSelect = (id) =>
@@ -88,12 +84,12 @@ const HistoryScreen = ({ navigation }) => {
         if (filter === "all") return true;
         if (filter === "quick") return i.mode === "quick";
         if (filter === "detailed") return i.mode === "detailed";
-        return i.mode === "detailed" && i.type === filter;   // ประเภทย่อย
+        return i.mode === "detailed" && i.type === filter;   //ประเภทย่อยๆ
     });
 
     return (
         <View style={styles.container}>
-            {/* แถบตัวกรองแถวเดียว */}
+
             <ScrollView horizontal showsHorizontalScrollIndicator={false}
                 style={styles.filterBar} contentContainerStyle={{ paddingHorizontal: 12 }}>
                 {MAIN_FILTERS.map((f) => {
@@ -107,12 +103,11 @@ const HistoryScreen = ({ navigation }) => {
                     );
                 })}
 
-                {/* ประเภทย่อย แทรกต่อท้ายเมื่ออยู่ในหมวดเหตุธรรมดา */}
                 {isDetailedGroup && INCIDENT_TYPES.map((t) => {
                     const on = filter === t.key;
                     return (
                         <TouchableOpacity key={t.key}
-                            style={[styles.chip, on && { backgroundColor: "#888", borderColor: "#888" }]}
+                            style={[styles.chip, on && styles.chipSub]}
                             onPress={() => selectSubType(t.key)}>
                             <Text style={[styles.chipText, on && { color: "#fff" }]}>{t.title}</Text>
                         </TouchableOpacity>
@@ -126,14 +121,12 @@ const HistoryScreen = ({ navigation }) => {
                 contentContainerStyle={{ padding: 12 }}
                 ListEmptyComponent={<Text style={styles.empty}>ไม่มีประวัติการแจ้งเหตุ</Text>}
                 renderItem={({ item }) => {
-                    const t = getTypeInfo(item.type);
-                    const deletable = !isActiveStatus(item.status);
+                    const active = isActiveStatus(item.status);   //เหตุที่ยังไม่จบ
                     const checked = selected.includes(item.id);
-                    const active = isActiveStatus(item.status);
 
-                    // โหมดเลือกลบ: เหตุที่ยังไม่จบจะกดเลือกไม่ได้
+                    //ลบเหตุที่ยังไม่จบไม่ได้
                     const onPress = selecting
-                        ? () => deletable && toggleSelect(item.id)
+                        ? () => !active && toggleSelect(item.id)
                         : () => navigation.navigate("Status", { incidentId: item.id });
 
                     return (
@@ -141,7 +134,7 @@ const HistoryScreen = ({ navigation }) => {
                             style={[
                                 styles.row,
                                 active && styles.rowActive,
-                                selecting && !deletable && { opacity: 0.4 },
+                                selecting && active && { opacity: 0.4 },
                             ]}
                             onPress={onPress}
                         >
@@ -154,7 +147,7 @@ const HistoryScreen = ({ navigation }) => {
                                 />
                             )}
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.title}>{t.title}</Text>
+                                <Text style={styles.title}>{getTypeInfo(item.type).title}</Text>
                                 <Text style={styles.sub} numberOfLines={1}>{item.address}</Text>
                                 <Text style={styles.time}>{formatDateTime(item.createdAt)}</Text>
                             </View>
@@ -166,7 +159,6 @@ const HistoryScreen = ({ navigation }) => {
                 }}
             />
 
-            {/* แถบลบด้านล่าง แสดงเมื่ออยู่โหมดเลือก */}
             {selecting && (
                 <TouchableOpacity
                     style={[styles.deleteBar, selected.length === 0 && { opacity: 0.4 }]}
@@ -181,29 +173,93 @@ const HistoryScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#f5f5f5" },
-    headerText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+    container: {
+        flex: 1,
+        backgroundColor: "#f5f5f5"
+    },
+    headerText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold"
+    },
 
-    tabRow: { flexDirection: "row", margin: 12, marginBottom: 0, backgroundColor: "#E2E8F0", borderRadius: 12, padding: 3 },
-    tab: { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: "center" },
-    tabSelected: { backgroundColor: "#f21212" },
-    tabText: { fontSize: 15, fontWeight: "bold", color: "#334155" },
+    filterBar: {
+        flexGrow: 0,
+        paddingVertical: 10
+    },
+    chip: {
+        paddingHorizontal: 14,
+        paddingVertical: 7,
+        borderRadius: 20,
+        backgroundColor: "#fff",
+        marginRight: 8,
+        borderWidth: 1,
+        borderColor: "#E2E8F0"
+    },
+    chipSelected: {
+        backgroundColor: "#f21212",
+        borderColor: "#f21212"
+    },
+    chipSub: {
+        backgroundColor: "#888",
+        borderColor: "#888"
+    },
+    chipText: {
+        fontSize: 14,
+        color: "#334155"
+    },
 
-    filterBar: { flexGrow: 0, paddingVertical: 10 },
-    chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: "#fff", marginRight: 8, borderWidth: 1, borderColor: "#E2E8F0" },
-    chipSelected: { backgroundColor: "#f21212", borderColor: "#f21212" },
-    chipText: { fontSize: 14, color: "#334155" },
+    row: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        padding: 14,
+        borderRadius: 12,
+        marginBottom: 10
+    },
+    rowActive: {
+        borderWidth: 1,
+        borderColor: "#f21212",
+        backgroundColor: "#FFF5F5"
+    },
+    title: {
+        fontSize: 16,
+        fontWeight: "bold"
+    },
+    sub: {
+        fontSize: 13,
+        color: "#64748B",
+        marginTop: 2
+    },
+    time: {
+        fontSize: 12,
+        color: "#94A3B8",
+        marginTop: 2
+    },
+    status: {
+        fontSize: 12,
+        fontWeight: "bold",
+        maxWidth: 90,
+        textAlign: "right"
+    },
+    empty: {
+        textAlign: "center",
+        marginTop: 40,
+        color: "#94A3B8"
+    },
 
-    row: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", padding: 14, borderRadius: 12, marginBottom: 10 },
-    title: { fontSize: 16, fontWeight: "bold" },
-    sub: { fontSize: 13, color: "#64748B", marginTop: 2 },
-    time: { fontSize: 12, color: "#94A3B8", marginTop: 2 },
-    status: { fontSize: 12, fontWeight: "bold", maxWidth: 90, textAlign: "right" },
-    empty: { textAlign: "center", marginTop: 40, color: "#94A3B8" },
-    rowActive: { borderWidth: 1, borderColor: "#f21212", backgroundColor: "#FFF5F5" },
-
-    deleteBar: { margin: 12, padding: 14, borderRadius: 10, backgroundColor: "#f21212", alignItems: "center" },
-    deleteBarText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+    deleteBar: {
+        margin: 12,
+        padding: 14,
+        borderRadius: 10,
+        backgroundColor: "#f21212",
+        alignItems: "center"
+    },
+    deleteBarText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold"
+    },
 });
 
 export default HistoryScreen;
