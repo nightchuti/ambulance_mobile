@@ -5,8 +5,8 @@ import { useUser } from "./UserContext";
 const LocationContext = createContext(null);
 export const useLocation = () => useContext(LocationContext);
 
-const TARGET_ACCURACY = 20; // เมตร
-const MAX_WAIT_MS = 8000;
+const TARGET_ACCURACY = 20;
+const MAX_WAIT_MS = 5000;
 
 // รอจนได้ค่าที่แม่นพอ หรือหมดเวลา แล้วคืนค่าที่ดีที่สุดที่เจอ
 const getBestPosition = async () => {
@@ -32,10 +32,10 @@ const getBestPosition = async () => {
 
 export const LocationProvider = ({ children }) => {
   const { authUser } = useUser();
-  const [location, setLocation] = useState(null);        // {latitude, longitude, accuracy}
+  const [location, setLocation] = useState(null);
   const [address, setAddress] = useState("กำลังระบุตำแหน่ง...");
   const [addressDetail, setAddressDetail] = useState(null);
-  const [source, setSource] = useState("gps");           // gps | manual
+  const [source, setSource] = useState("gps"); //gps,manual
   const [loading, setLoading] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
 
@@ -55,7 +55,7 @@ export const LocationProvider = ({ children }) => {
     }
   };
 
-  // ดึงตำแหน่งจาก GPS
+  //ดึงตำแหน่งจาก GPS
   const refresh = useCallback(async () => {
     setLoading(true);
     setAddress("กำลังระบุตำแหน่ง...");
@@ -80,7 +80,7 @@ export const LocationProvider = ({ children }) => {
     }
   }, []);
 
-  // ผู้ใช้ปักหมุดเอง
+  //ผู้ใช้ปักหมุดเอง
   const setManualLocation = async ({ latitude, longitude }) => {
     setLocation({ latitude, longitude, accuracy: null });
     setSource("manual");
@@ -88,7 +88,7 @@ export const LocationProvider = ({ children }) => {
     await loadAddress({ latitude, longitude });
   };
 
-  // เริ่มดึงเมื่อล็อกอินแล้วเท่านั้น (ไม่ขอ permission ในหน้า Login)
+  //ดึงตำแหน่งเมื่อล็อกอินแล้ว
   useEffect(() => {
     if (authUser) refresh();
     else { setLocation(null); setAddressDetail(null); }

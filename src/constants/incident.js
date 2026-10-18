@@ -1,6 +1,5 @@
 export const INCIDENT_MODE = { QUICK: "quick", DETAILED: "detailed" };
 
-// ประเภทที่ผู้ใช้เลือกได้ (ใช้ไอคอนจาก MaterialCommunityIcons ชุดเดียว)
 export const INCIDENT_TYPES = [
   { key: "car_accident", title: "อุบัติเหตุรถ", icon: "car-emergency", color: "#F59E0B" },
   { key: "cardiac", title: "หัวใจ/หมดสติ", icon: "heart-pulse", color: "#EF4444" },
@@ -10,7 +9,6 @@ export const INCIDENT_TYPES = [
   { key: "other", title: "เหตุอื่น ๆ", icon: "alert-circle", color: "#64748B" },
 ];
 
-// ประเภทของการแจ้งแบบด่วน (ไม่แสดงในตัวเลือก)
 export const SOS_TYPE = { key: "sos", title: "แจ้งเหตุด่วน (SOS)", icon: "alarm-light", color: "#f21212" };
 
 export const getTypeInfo = (key) =>
@@ -51,16 +49,17 @@ export const STATUS_COLOR = {
   cancelled: "#94A3B8",
 };
 
-// ลำดับขั้นที่แสดงบนหน้า Status
+//ลำดับที่จะแสดงบน Status
 export const STATUS_FLOW = ["pending", "accepted", "on_the_way", "arrived", "completed"];
 
+//ตรวจว่าการแจ้งเหตุเสร็จสิ้นยัง t = ยัง
+export const isActiveStatus = (s) => s !== STATUS.COMPLETED && s !== STATUS.CANCELLED;
+
+//ใช้กับhistory 01 ม.ค. 2026 00:00
 export const formatDateTime = (ts) =>
   ts?.toDate ? ts.toDate().toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" }) : "-";
 
-// เหตุที่ยังไม่จบ = ยังกลับไปดูสถานะได้
-export const isActiveStatus = (s) => s !== STATUS.COMPLETED && s !== STATUS.CANCELLED;
-
-// "26 ก.ค. 14:51"
+//ใช้กับstatus 01 ม.ค. 00:00
 export const formatShortTime = (ts) =>
   ts?.toDate
     ? ts.toDate().toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })

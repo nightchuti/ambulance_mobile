@@ -1,9 +1,6 @@
-import {
-  collection, doc, writeBatch, onSnapshot, query, where, orderBy, limit, serverTimestamp,
-} from "firebase/firestore";
+import { collection, doc, writeBatch, onSnapshot, query, where, orderBy, limit, serverTimestamp, updateDoc, } from "firebase/firestore";
 import { db } from "../firebase/config";
-import { STATUS } from "../constants/incident";
-import { updateDoc } from "firebase/firestore";
+import { STATUS, STATUS_LABEL } from "../constants/incident";
 
 export const newIncidentId = () => doc(collection(db, "incidents")).id;
 
@@ -23,6 +20,7 @@ export const createIncident = async ({
     description: description.trim(),
     images,
     reporter: {
+      uid,
       name: `${profile.firstname} ${profile.lastname}`,
       phone: profile.phone,
     },
@@ -42,7 +40,7 @@ export const createIncident = async ({
 
   batch.set(doc(collection(ref, "timeline")), {
     status: STATUS.PENDING,
-    note: mode === "quick" ? "ผู้ใช้แจ้งเหตุด่วน" : "ผู้ใช้แจ้งเหตุ",
+    note: STATUS_LABEL[STATUS.PENDING],
     at: serverTimestamp(),
   });
 
@@ -50,7 +48,7 @@ export const createIncident = async ({
   return ref.id;
 };
 
-// ฟังเหตุเดียวแบบ real-time (หน้า Status)
+//ติดตามเหตุหน้า Status
 export const subscribeIncident = (id, onData, onError) =>
   onSnapshot(
     doc(db, "incidents", id),
@@ -58,30 +56,44 @@ export const subscribeIncident = (id, onData, onError) =>
     onError
   );
 
-// ฟัง timeline ที่เจ้าหน้าที่บันทึก
+//ติดตามเหตุส่วน timeline
 export const subscribeTimeline = (id, onData) =>
-  onSnapshot(query(collection(db, "incidents", id, "timeline"), orderBy("at", "asc")), (s) =>
-    onData(s.docs.map((d) => ({ id: d.id, ...d.data() })))
+  onSnapshot(
+    query(
+      collection(db, "incidents", id, "timeline"),
+      orderBy("at", "asc")
+    ),
+    (s) => onData(s.docs.map((d) => ({ id: d.id, ...d.data() })))
   );
 
-// ประวัติของผู้ใช้ (ต้องสร้าง composite index: userId + createdAt)
+//ประวัติของผู้ใช้
 export const subscribeMyIncidents = (uid, onData, onError) =>
   onSnapshot(
-    query(collection(db, "incidents"), where("userId", "==", uid), orderBy("createdAt", "desc"), limit(50)),
+    query(
+      collection(db, "incidents"),
+      where("userId", "==", uid),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    ),
     (s) => onData(s.docs.map((d) => ({ id: d.id, ...d.data() }))),
     onError
   );
 
-// ผู้ใช้ยกเลิกเอง (ได้เฉพาะตอน pending ตาม Security Rules)
+//ผู้ใช้ยกเลิกเหตุ
 export const cancelIncident = async (id) => {
   const batch = writeBatch(db);
-  batch.update(doc(db, "incidents", id), { status: STATUS.CANCELLED, updatedAt: serverTimestamp() });
+  batch.update(doc(db, "incidents", id), {
+    status: STATUS.CANCELLED,
+    updatedAt: serverTimestamp()
+  });
   batch.set(doc(collection(db, "incidents", id, "timeline")), {
-    status: STATUS.CANCELLED, note: "ผู้ใช้ยกเลิก", at: serverTimestamp(),
+    status: STATUS.CANCELLED,
+    note: STATUS_LABEL[STATUS.CANCELLED],
+    at: serverTimestamp(),
   });
   await batch.commit();
 };
 
-// ซ่อนประวัติ (ไม่ลบเอกสารจริง)
+//ซ่อนประวัติ
 export const hideIncident = (id) =>
   updateDoc(doc(db, "incidents", id), { hiddenByUser: true, updatedAt: serverTimestamp() });
