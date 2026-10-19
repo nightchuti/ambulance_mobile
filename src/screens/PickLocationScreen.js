@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
-import MapView from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useLocation } from "../context/LocationContext";
@@ -9,25 +9,42 @@ const FALLBACK = { latitude: 14.0239, longitude: 99.9752 };
 const DELTA = 0.003;
 
 const PickLocationScreen = ({ navigation }) => {
-    const { location, setManualLocation } = useLocation();
+    const { location, address, placeName, setManualLocation } = useLocation();
     const mapRef = useRef(null);
     const start = location || FALLBACK;
-
-    const [pin, setPin] = useState({ latitude: start.latitude, longitude: start.longitude });
-    const [text, setText] = useState(" ");
+    const poiRef = useRef(placeName && location ? { latitude: location.latitude, longitude: location.longitude } : null);
+    const [pin, setPin] = useState({ latitude: start.latitude, longitude: start.longitude, name: poiRef.current ? placeName : null });
+    const [text, setText] = useState(poiRef.current ? address : " ");
     const [locating, setLocating] = useState(false);
     const [busy, setBusy] = useState(false);
 
-    const handleRegionChange = async (region) => {
-        const coords = { latitude: region.latitude, longitude: region.longitude };
-        setPin(coords);
-        setText("กำลังระบุที่อยู่...");
+    const updatePin = async ({ latitude, longitude }, name = null) => {
+        setPin({ latitude, longitude, name });
+        setText(name || "กำลังระบุที่อยู่...");
+
         try {
-            const [a] = await Location.reverseGeocodeAsync(coords);
-            setText(a ? [a.name, a.street, a.district, a.subregion, a.city, a.region].filter(Boolean).join(" ") || "ไม่พบที่อยู่" : "ไม่พบที่อยู่");
+            const [a] = await Location.reverseGeocodeAsync({ latitude, longitude });
+            const parts = a ? [name || a.name, a.street, a.district, a.subregion, a.city, a.region] : [name];
+            setText(parts.filter(Boolean).join(" ") || "ไม่พบที่อยู่");
         } catch {
-            setText("ไม่สามารถแปลงเป็นที่อยู่ได้");
+            setText(name || "ไม่สามารถแปลงเป็นที่อยู่ได้");
         }
+    };
+
+    //กดเลือกสถานที่
+    const handlePoiClick = (e) => {
+        const { coordinate, name } = e.nativeEvent;
+        poiRef.current = coordinate;
+        updatePin(coordinate, name);
+        mapRef.current?.animateCamera({ center: coordinate }, { duration: 500 });
+    };
+
+    //กลับไปใช้ตำแหน่งตรงกลางจอ
+    const handlePanDrag = () => { poiRef.current = null; };
+
+    const handleRegionChange = (region) => {
+        if (poiRef.current) return;
+        updatePin({ latitude: region.latitude, longitude: region.longitude });
     };
 
     const goToMyLocation = async () => {
@@ -38,6 +55,7 @@ const PickLocationScreen = ({ navigation }) => {
                 return Alert.alert("ไม่ได้รับอนุญาต", "กรุณาอนุญาตการเข้าถึง GPS");
             }
             const p = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
+            poiRef.current = null;
             mapRef.current?.animateToRegion(
                 { latitude: p.coords.latitude, longitude: p.coords.longitude, latitudeDelta: DELTA, longitudeDelta: DELTA },
                 500
@@ -61,14 +79,16 @@ const PickLocationScreen = ({ navigation }) => {
             <View style={styles.mapWrapper}>
                 <MapView
                     ref={mapRef}
+                    provider={PROVIDER_GOOGLE}
                     style={StyleSheet.absoluteFill}
-                    initialRegion={{ ...pin, latitudeDelta: DELTA, longitudeDelta: DELTA }}
+                    initialRegion={{ latitude: pin.latitude, longitude: pin.longitude, latitudeDelta: DELTA, longitudeDelta: DELTA }}
                     onRegionChangeComplete={handleRegionChange}
+                    onPoiClick={handlePoiClick}
+                    onPanDrag={handlePanDrag}
                     showsUserLocation
                     showsMyLocationButton={false}
                 />
 
-                {/*หมุดอยู่ที่กลางแผนที่*/}
                 <View pointerEvents="none" style={styles.pinWrapper}>
                     <MaterialIcons name="location-pin" size={48} color="#f21212" />
                 </View>

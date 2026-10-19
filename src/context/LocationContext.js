@@ -1,18 +1,21 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import * as Location from "expo-location";
 import { useUser } from "./UserContext";
 
 const LocationContext = createContext(null);
 export const useLocation = () => useContext(LocationContext);
 
-const TARGET_ACCURACY = 20;
+const TARGET_ACCURACY = 15;
 const MAX_WAIT_MS = 5000;
 
-// รอจนได้ค่าที่แม่นพอ หรือหมดเวลา แล้วคืนค่าที่ดีที่สุดที่เจอ
 const getBestPosition = async () => {
   let best = null;
   const sub = await Location.watchPositionAsync(
-    { accuracy: Location.Accuracy.BestForNavigation, timeInterval: 1000, distanceInterval: 0 },
+    { 
+      accuracy: Location.Accuracy.BestForNavigation, 
+      timeInterval: 1000, 
+      distanceInterval: 0 
+    },
     (pos) => {
       if (!best || pos.coords.accuracy < best.accuracy) best = pos.coords;
     }
@@ -35,23 +38,35 @@ export const LocationProvider = ({ children }) => {
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState("กำลังระบุตำแหน่ง...");
   const [addressDetail, setAddressDetail] = useState(null);
-  const [source, setSource] = useState("gps"); //gps,manual
+  const [placeName, setPlaceName] = useState(null);
+  const [source, setSource] = useState("gps");
+  const addressReq = useRef(0);
   const [loading, setLoading] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
 
-  const loadAddress = async (coords) => {
+  const loadAddress = async (coords, name = null) => {
+    const reqId = ++addressReq.current;
     try {
       const [a] = await Location.reverseGeocodeAsync(coords);
-      if (!a) return;
+      if (reqId !== addressReq.current) return;
+      if (!a) {
+        if (name) {
+          setAddressDetail({ name });
+          setAddress(name);
+        }
+        return;
+      }
       const detail = {
-        name: a.name || null, street: a.street || null, district: a.district || null,
+        name: name || a.name || null, street: a.street || null, district: a.district || null,
         subregion: a.subregion || null, city: a.city || null,
         region: a.region || null, postalCode: a.postalCode || null,
       };
       setAddressDetail(detail);
       setAddress(Object.values(detail).filter(Boolean).join(" ") || "ไม่พบที่อยู่");
     } catch {
-      setAddress("ไม่สามารถแปลงเป็นที่อยู่ได้");
+      if (reqId !== addressReq.current) return;
+      if (name) setAddressDetail({ name });
+      setAddress(name || "ไม่สามารถแปลงเป็นที่อยู่ได้");
     }
   };
 
@@ -70,6 +85,7 @@ export const LocationProvider = ({ children }) => {
       const c = await getBestPosition();
       setLocation({ latitude: c.latitude, longitude: c.longitude, accuracy: c.accuracy });
       setSource("gps");
+      setPlaceName(null);
       await loadAddress(c);
       return c;
     } catch {
@@ -81,11 +97,12 @@ export const LocationProvider = ({ children }) => {
   }, []);
 
   //ผู้ใช้ปักหมุดเอง
-  const setManualLocation = async ({ latitude, longitude }) => {
+  const setManualLocation = async ({ latitude, longitude, name = null }) => {
     setLocation({ latitude, longitude, accuracy: null });
     setSource("manual");
-    setAddress("กำลังระบุที่อยู่...");
-    await loadAddress({ latitude, longitude });
+    setPlaceName(name);
+    setAddress(name || "กำลังระบุที่อยู่...");
+    await loadAddress({ latitude, longitude }, name);
   };
 
   //ดึงตำแหน่งเมื่อล็อกอินแล้ว
