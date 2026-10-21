@@ -1,11 +1,11 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Modal, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Modal, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
 import TextFormInput from "../components/TextFormInput";
 import SelectFormInput from "../components/SelectFormInput";
 import DateFormInput from "../components/DateFormInput";
-import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase/config";
-import { createUserProfile } from "../services/userService";
+import { sendRegisterOtp, verifyOtpAndRegister, otpErrorMessage } from "../services/otpService";
 
 const RegisterScreen = ({ navigation }) => {
 
@@ -22,6 +22,21 @@ const RegisterScreen = ({ navigation }) => {
     const [showConsent, setShowConsent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+
+    // OTP
+    const [showOtp, setShowOtp] = useState(false);
+    const [otp, setOtp] = useState("");
+    const [otpError, setOtpError] = useState("");
+    const [otpLoading, setOtpLoading] = useState(false);
+    const [resendIn, setResendIn] = useState(0);
+    const otpEmailRef = useRef("");
+
+    // นับถอยหลังก่อนขอรหัสใหม่ได้
+    useEffect(() => {
+        if (resendIn <= 0) return;
+        const t = setTimeout(() => setResendIn((n) => n - 1), 1000);
+        return () => clearTimeout(t);
+    }, [resendIn]);
 
     const handleChange = (setValue, fieldName) => (value) => {
         setValue(value);
@@ -120,45 +135,89 @@ const RegisterScreen = ({ navigation }) => {
             return;
         }
 
-        //เริ่มสมัคร
+        //ส่ง OTP ไปที่อีเมลก่อน แล้วค่อยให้กรอกรหัสเพื่อสมัคร
         setLoading(true);
-        let newUser = null;
         try {
-
-            const result = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-            newUser = result.user;
-
-            await createUserProfile(newUser.uid, {
-                firstname: cleanFirstname,
-                lastname: cleanLastname,
-                gender,
-                birthDate: birthDate.toISOString(),
-                phone: number,
-                email: cleanEmail,
-                idcard,
-            });
-
+            const res = await sendRegisterOtp(cleanEmail);
+            otpEmailRef.current = cleanEmail;
+            setOtp("");
+            setOtpError("");
+            setResendIn(res?.resendAfterSec ?? 60);
+            setShowOtp(true);
         } catch (error) {
-            if (newUser) {
-                try { await deleteUser(newUser); } catch (e) { }
-            }
-            if (error.code === "auth/email-already-in-use") {
-                setFormErrors({ email: "อีเมลนี้ถูกใช้งานแล้ว" });
-            } else if (error.code === "auth/invalid-email") {
-                setFormErrors({ email: "รูปแบบอีเมลไม่ถูกต้อง" });
-            } else if (error.code === "auth/weak-password") {
-                setFormErrors({ password: "รหัสผ่านง่ายเกินไป" });
-            } else if (error.code === "auth/network-request-failed") {
-                Alert.alert("ผิดพลาด", "เชื่อมต่ออินเทอร์เน็ตไม่ได้ กรุณาลองใหม่");
-            } else if (error.code === "auth/too-many-requests") {
-                Alert.alert("ผิดพลาด", "ลองหลายครั้งเกินไป กรุณารอสักครู่");
-            } else if (error.code === "permission-denied") {
-                Alert.alert("ผิดพลาด", "ไม่มีสิทธิ์บันทึกข้อมูล กรุณาติดต่อผู้ดูแลระบบ");
+            const msg = otpErrorMessage(error);
+            if (error?.message === "email-already-in-use" || error?.message === "invalid-email") {
+                setFormErrors({ email: msg });
             } else {
-                Alert.alert("ผิดพลาด", "สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+                Alert.alert("ผิดพลาด", msg);
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    //ขอ OTP ใหม่
+    const handleResendOtp = async () => {
+        if (otpLoading || resendIn > 0) return;
+        setOtpLoading(true);
+        setOtpError("");
+        try {
+            const res = await sendRegisterOtp(otpEmailRef.current);
+            setOtp("");
+            setResendIn(res?.resendAfterSec ?? 60);
+        } catch (error) {
+            setOtpError(otpErrorMessage(error));
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+    //ยืนยัน OTP -> สร้างบัญชี -> เข้าสู่ระบบ
+    const handleVerifyOtp = async () => {
+        if (otpLoading) return;
+        if (!/^\d{6}$/.test(otp)) {
+            setOtpError("กรุณากรอกรหัส OTP 6 หลัก");
+            return;
+        }
+        setOtpLoading(true);
+        setOtpError("");
+        try {
+            await verifyOtpAndRegister({
+                email: otpEmailRef.current,
+                otp,
+                firstname: firstname.trim(),
+                lastname: lastname.trim(),
+                gender,
+                birthDate: birthDate.toISOString(),
+                phone: number,
+                idcard,
+                password,
+            });
+        } catch (error) {
+            const code = error?.message;
+            const msg = otpErrorMessage(error);
+            if (code === "email-already-in-use") {
+                setShowOtp(false);
+                setFormErrors({ email: msg });
+            } else if (code === "weak-password") {
+                setShowOtp(false);
+                setFormErrors({ password: msg });
+            } else {
+                setOtpError(msg);
+            }
+            setOtpLoading(false);
+            return;
+        }
+
+        //สมัครสำเร็จ -> ล็อกอินให้อัตโนมัติ (App จะพาไปหน้า Home เอง)
+        try {
+            await signInWithEmailAndPassword(auth, otpEmailRef.current, password);
+        } catch (e) {
+            setShowOtp(false);
+            Alert.alert("สมัครสมาชิกสำเร็จ", "กรุณาเข้าสู่ระบบด้วยอีเมลและรหัสผ่านของคุณ");
+            navigation.navigate("Login");
+        } finally {
+            setOtpLoading(false);
         }
     };
 
@@ -303,6 +362,65 @@ const RegisterScreen = ({ navigation }) => {
                         <Text style={styles.loginButtonText}>เข้าสู่ระบบ</Text>
                     </TouchableOpacity>
                 </View>
+
+                {/* Modal for OTP */}
+                <Modal
+                    visible={showOtp}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => { if (!otpLoading) setShowOtp(false); }}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            <Text style={styles.modalTitle}>ยืนยันอีเมล</Text>
+                            <Text style={styles.modalText}>
+                                ระบบส่งรหัส OTP 6 หลักไปที่ {otpEmailRef.current} แล้ว
+                                (หมดอายุใน 5 นาที) หากไม่พบ กรุณาตรวจสอบในจดหมายขยะ
+                            </Text>
+                            <TextInput
+                                style={[styles.otpInput, otpError ? styles.otpInputError : null]}
+                                value={otp}
+                                onChangeText={(v) => { setOtp(v.replace(/\D/g, "")); setOtpError(""); }}
+                                keyboardType="number-pad"
+                                maxLength={6}
+                                placeholder="------"
+                                placeholderTextColor="#bbb"
+                                autoFocus
+                            />
+                            {otpError ? <Text style={styles.otpErrorText}>{otpError}</Text> : null}
+
+                            <TouchableOpacity
+                                style={[styles.otpButton, otpLoading && styles.signUpButtonDisabled]}
+                                onPress={handleVerifyOtp}
+                                disabled={otpLoading}
+                            >
+                                {otpLoading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <Text style={styles.otpButtonText}>ยืนยันและสมัครสมาชิก</Text>
+                                )}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={handleResendOtp}
+                                disabled={resendIn > 0 || otpLoading}
+                                style={{ alignItems: "center", marginTop: 12 }}
+                            >
+                                <Text style={[styles.resendText, (resendIn > 0 || otpLoading) && { color: "#999" }]}>
+                                    {resendIn > 0 ? `ขอรหัสใหม่ได้ใน ${resendIn} วินาที` : "ขอรหัส OTP ใหม่"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.closeButton}
+                                onPress={() => setShowOtp(false)}
+                                disabled={otpLoading}
+                            >
+                                <Text style={styles.closeButtonText}>ยกเลิก</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
 
                 {/* Modal for consent details */}
                 <Modal
@@ -462,51 +580,87 @@ const styles = StyleSheet.create({
         color: "#2196F3",
     },
 
-    // loginButtonDisabled: {
-    //     backgroundColor: "#ccc",
-    // },
+    signUpButtonDisabled: {
+        backgroundColor: "#ccc",
+    },
 
-    // modalOverlay: {
-    //     flex: 1,
-    //     backgroundColor: "rgba(0,0,0,0.5)",
-    //     justifyContent: "center",
-    //     paddingHorizontal: 20,
-    // },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        paddingHorizontal: 20,
+    },
 
-    // modalContainer: {
-    //     backgroundColor: "#fff",
-    //     borderRadius: 15,
-    //     padding: 20,
-    // },
+    modalContainer: {
+        backgroundColor: "#fff",
+        borderRadius: 15,
+        padding: 20,
+    },
 
-    // modalTitle: {
-    //     fontSize: 18,
-    //     fontWeight: "bold",
-    //     marginBottom: 15,
-    // },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 15,
+    },
 
-    // modalText: {
-    //     fontSize: 14,
-    //     lineHeight: 22,
-    //     color: "#333",
-    //     marginBottom: 12,
-    // },
+    modalText: {
+        fontSize: 14,
+        lineHeight: 22,
+        color: "#333",
+        marginBottom: 12,
+    },
 
-    // closeButton: {
-    //     backgroundColor: "#2196F3",
-    //     borderRadius: 10,
-    //     paddingVertical: 10,
-    //     alignItems: "center",
-    //     marginTop: 5,
-    // },
+    closeButton: {
+        backgroundColor: "#2196F3",
+        borderRadius: 10,
+        paddingVertical: 10,
+        alignItems: "center",
+        marginTop: 5,
+    },
 
-    // closeButtonText: {
-    //     color: "#fff",
-    //     fontSize: 15,
-    //     fontWeight: "bold",
-    // },
+    closeButtonText: {
+        color: "#fff",
+        fontSize: 15,
+        fontWeight: "bold",
+    },
 
 
+
+    otpInput: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        fontSize: 28,
+        letterSpacing: 8,
+        textAlign: "center",
+        paddingVertical: 10,
+        marginBottom: 8,
+        color: "#000",
+    },
+    otpInputError: {
+        borderColor: "#f21212",
+    },
+    otpErrorText: {
+        color: "#f21212",
+        fontSize: 13,
+        marginBottom: 8,
+    },
+    otpButton: {
+        backgroundColor: "#f21212",
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: "center",
+        marginTop: 8,
+    },
+    otpButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+    resendText: {
+        color: "#2196F3",
+        fontSize: 14,
+    },
 });
 
 export default RegisterScreen;
