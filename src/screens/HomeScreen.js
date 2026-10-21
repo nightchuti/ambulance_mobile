@@ -7,6 +7,7 @@ import { createIncident, subscribeMyIncidents, newIncidentId } from "../services
 import { INCIDENT_TYPES, SOS_TYPE, INCIDENT_MODE, isActiveStatus, getTypeInfo } from "../constants/incident";
 import LocationEditButton from "../components/LocationEditButton";
 import { subscribeAEDs, distanceMeters } from "../services/aedService";
+import { confirmInServiceArea } from "../services/serviceAreaService";
 
 const HomeScreen = ({ navigation }) => {
 
@@ -55,9 +56,14 @@ const HomeScreen = ({ navigation }) => {
     };
 
     //แจ้งแบบด่วน
-    const handleSOS = () => {
+    const handleSOS = async () => {
         if (sending || blockIfActive() || !ensureReady()) return;
         if (!profile) return Alert.alert("กรุณารอสักครู่", "กำลังโหลดข้อมูลผู้ใช้");
+
+        setSending(true);
+        const serviceArea = await confirmInServiceArea(location, navigation);
+        setSending(false);
+        if (!serviceArea) return;
 
         Alert.alert(
             "ยืนยันแจ้งเหตุด่วน",

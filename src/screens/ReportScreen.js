@@ -8,6 +8,7 @@ import { uploadImages } from "../services/cloudinaryService";
 import { createIncident, newIncidentId } from "../services/incidentService";
 import { INCIDENT_TYPES, SEVERITY, INCIDENT_MODE } from "../constants/incident";
 import LocationEditButton from "../components/LocationEditButton";
+import { confirmInServiceArea } from "../services/serviceAreaService";
 
 const ReportScreen = ({ navigation, route }) => {
     const { location, address, addressDetail, source } = useLocation();
@@ -48,6 +49,12 @@ const ReportScreen = ({ navigation, route }) => {
         if (!profile) return Alert.alert("กรุณารอสักครู่", "กำลังโหลดข้อมูลผู้ใช้");
 
         setSending(true);
+        const serviceArea = await confirmInServiceArea(location, navigation);
+        if (!serviceArea) {
+            setSending(false);
+            return;
+        }
+        
         try {
             const incidentId = newIncidentId();
             let uploaded = [];
@@ -237,20 +244,20 @@ const styles = StyleSheet.create({
         fontWeight: "700",
     },
 
-    severityRow: { 
-        flexDirection: "row", 
-        gap: 8 
+    severityRow: {
+        flexDirection: "row",
+        gap: 8
     },
     severityChip: {
-        flex: 1, 
-        borderWidth: 0.5, 
+        flex: 1,
+        borderWidth: 0.5,
         borderRadius: 10,
-        paddingVertical: 10, 
-        alignItems: "center", 
+        paddingVertical: 10,
+        alignItems: "center",
         backgroundColor: "#fff",
     },
-    severityText: { 
-        fontSize: 14,  
+    severityText: {
+        fontSize: 14,
     },
 
     locText: {
