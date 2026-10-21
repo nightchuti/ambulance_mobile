@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Modal, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import TextFormInput from "../components/TextFormInput";
 import SelectFormInput from "../components/SelectFormInput";
 import DateFormInput from "../components/DateFormInput";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { createUserProfile } from "../services/userService";
+import { sealIdCard, maskIdCard } from "../services/idcardCrypto";
+import ConsentModal from "../components/ConsentModal";
 
 const RegisterScreen = ({ navigation }) => {
 
@@ -19,7 +21,6 @@ const RegisterScreen = ({ navigation }) => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [consent, setConsent] = useState(false);
-    const [showConsent, setShowConsent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [formErrors, setFormErrors] = useState({});
 
@@ -39,14 +40,14 @@ const RegisterScreen = ({ navigation }) => {
         //ชื่อ
         if (!cleanFirstname) {
             errors.firstname = "กรุณากรอกชื่อ";
-        } else if (!/^[ก-๙a-zA-Z\s]{2,30}$/.test(cleanFirstname)) {
-            errors.firstname = "ชื่อต้องเป็นตัวอักษรไทยหรืออังกฤษ 2-30 ตัว";
+        } else if (!/^[ก-๙a-zA-Z\s]{1,30}$/.test(cleanFirstname)) {
+            errors.firstname = "กรุณาตรวจสอบชื่อให้ถูกต้อง";
         }
         //นามสกุล
         if (!cleanLastname) {
             errors.lastname = "กรุณากรอกนามสกุล";
-        } else if (!/^[ก-๙a-zA-Z\s]{2,30}$/.test(cleanLastname)) {
-            errors.lastname = "นามสกุลต้องเป็นตัวอักษรไทยหรืออังกฤษ 2-30 ตัว";
+        } else if (!/^[ก-๙a-zA-Z\s]{1,30}$/.test(cleanLastname)) {
+            errors.lastname = "กรุณาตรวจสอบนามสกุลให้ถูกต้อง";
         }
         //เพศ
         if (!gender) {
@@ -80,25 +81,25 @@ const RegisterScreen = ({ navigation }) => {
         if (!number) {
             errors.number = "กรุณากรอกเบอร์โทรศัพท์";
         } else if (!/^0[689]\d{8}$/.test(number)) {
-            errors.number = "ต้องเป็นเบอร์มือถือ 10 หลัก เช่น 08xxxxxxxx";
+            errors.number = "เบอร์โทรศัพท์ไม่ถูกต้อง";
         }
         //อีเมล
         if (!cleanEmail) {
             errors.email = "กรุณากรอกอีเมล";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-            errors.email = "รูปแบบอีเมลไม่ถูกต้อง";
+            errors.email = "อีเมลไม่ถูกต้อง";
         }
         //รหัสผ่าน
         if (!password) {
             errors.password = "กรุณากรอกรหัสผ่าน";
-        } else if (password.length < 8) {
-            errors.password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
-        } else if (/\s/.test(password)) {
-            errors.password = "รหัสผ่านห้ามมีช่องว่าง";
-        } else if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-            errors.password = "รหัสผ่านต้องมีทั้งตัวอักษรและตัวเลข";
-        } else if (password === idcard || password === number || password === cleanEmail) {
-            errors.password = "รหัสผ่านต้องไม่เหมือนข้อมูลส่วนตัว";
+        } else if (
+            password.length < 8 ||
+            /\s/.test(password) ||
+            !/[A-Za-z]/.test(password) ||
+            !/\d/.test(password) ||
+            password === idcard || password === number || password === cleanEmail
+        ) {
+            errors.password = "รหัสผ่านไม่ตรงตามเงื่อนไข (อย่างน้อย 8 ตัว มีตัวอักษรและตัวเลข)";
         }
         //ยืนยันรหัสผ่าน
         if (!confirmPassword) {
@@ -120,11 +121,19 @@ const RegisterScreen = ({ navigation }) => {
             return;
         }
 
+        let idcardSealed, idcardMasked;
+        try {
+            idcardSealed = sealIdCard(idcard);
+            idcardMasked = maskIdCard(idcard);
+        } catch {
+            Alert.alert("ผิดพลาด", "ระบบรักษาความปลอดภัยข้อมูลไม่พร้อมใช้งาน กรุณาติดต่อผู้ดูแลระบบ");
+            return;
+        }
+
         //เริ่มสมัคร
         setLoading(true);
         let newUser = null;
         try {
-
             const result = await createUserWithEmailAndPassword(auth, cleanEmail, password);
             newUser = result.user;
 
@@ -135,7 +144,8 @@ const RegisterScreen = ({ navigation }) => {
                 birthDate: birthDate.toISOString(),
                 phone: number,
                 email: cleanEmail,
-                idcard,
+                idcardSealed,
+                idcardMasked,
             });
 
         } catch (error) {
@@ -147,13 +157,11 @@ const RegisterScreen = ({ navigation }) => {
             } else if (error.code === "auth/invalid-email") {
                 setFormErrors({ email: "รูปแบบอีเมลไม่ถูกต้อง" });
             } else if (error.code === "auth/weak-password") {
-                setFormErrors({ password: "รหัสผ่านง่ายเกินไป" });
+                setFormErrors({ password: "รหัสผ่านไม่ตรงตามเงื่อนไข (อย่างน้อย 8 ตัว มีตัวอักษรและตัวเลข)" });
             } else if (error.code === "auth/network-request-failed") {
                 Alert.alert("ผิดพลาด", "เชื่อมต่ออินเทอร์เน็ตไม่ได้ กรุณาลองใหม่");
             } else if (error.code === "auth/too-many-requests") {
                 Alert.alert("ผิดพลาด", "ลองหลายครั้งเกินไป กรุณารอสักครู่");
-            } else if (error.code === "permission-denied") {
-                Alert.alert("ผิดพลาด", "ไม่มีสิทธิ์บันทึกข้อมูล กรุณาติดต่อผู้ดูแลระบบ");
             } else {
                 Alert.alert("ผิดพลาด", "สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
             }
@@ -167,7 +175,7 @@ const RegisterScreen = ({ navigation }) => {
             style={{ flex: 1 }}
             behavior="height"
         >
-            <ScrollView style={styles.container}>
+            <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
 
                 <View style={styles.logosection}>
                     <Image source={require('../../assets/logo.png')} style={styles.logo} />
@@ -196,14 +204,14 @@ const RegisterScreen = ({ navigation }) => {
                         </View>
                     </View>
                     <View style={{ marginHorizontal: 12 }}>
-                    <SelectFormInput
-                        label="เพศ"
-                        value={gender}
-                        onValueChange={handleChange(setGender, "gender")}
-                        placeholder="เลือกเพศของคุณ"
-                        options={["ชาย", "หญิง", "อื่นๆ"]}
-                        error={formErrors.gender}
-                    />
+                        <SelectFormInput
+                            label="เพศ"
+                            value={gender}
+                            onValueChange={handleChange(setGender, "gender")}
+                            placeholder="เลือกเพศของคุณ"
+                            options={["ชาย", "หญิง", "อื่นๆ"]}
+                            error={formErrors.gender}
+                        />
                     </View>
                     <DateFormInput
                         label="วันเกิด"
@@ -257,29 +265,11 @@ const RegisterScreen = ({ navigation }) => {
                         autoCapitalize="none"
                         error={formErrors.confirmPassword}
                     />
-                    <View style={styles.consentContainer}>
-                        <TouchableOpacity
-                            style={styles.consentRow}
-                            onPress={() => setConsent(!consent)}
-                        >
-                            <View style={[
-                                styles.checkbox,
-                                consent && styles.checkboxChecked
-                            ]}>
-                                {consent && <Text style={styles.checkmark}>✓</Text>}
-                            </View>
-                        </TouchableOpacity>
-                        <View style={styles.consentContent}>
-                            <Text style={styles.consentText}>
-                                ยินยอมให้เก็บและใช้ข้อมูลเลขบัตรประชาชน
-                            </Text>
-                            <TouchableOpacity onPress={() => setShowConsent(true)}>
-                                <Text style={styles.detailText}>
-                                    ดูรายละเอียดการใช้ข้อมูล
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+
+                    <ConsentModal
+                        checked={consent}
+                        onToggle={() => setConsent(!consent)}
+                    />
 
                     <TouchableOpacity
                         style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
@@ -303,47 +293,6 @@ const RegisterScreen = ({ navigation }) => {
                         <Text style={styles.loginButtonText}>เข้าสู่ระบบ</Text>
                     </TouchableOpacity>
                 </View>
-
-                {/* Modal for consent details */}
-                <Modal
-                    visible={showConsent}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setShowConsent(false)}
-                >
-                    <View style={styles.modalOverlay}>
-
-                        <View style={styles.modalContainer}>
-
-                            <Text style={styles.modalTitle}>
-                                การเก็บข้อมูลเลขบัตรประชาชน
-                            </Text>
-
-                            <Text style={styles.modalText}>
-                                ระบบจะเก็บรวบรวมเลขบัตรประชาชนของคุณ
-                                เพื่อใช้ในการยืนยันตัวตนและดำเนินการตาม
-                                วัตถุประสงค์ของระบบ
-                            </Text>
-
-                            <Text style={styles.modalText}>
-                                ข้อมูลจะถูกจัดเก็บในฐานข้อมูลของระบบ
-                                และนำไปใช้ตามวัตถุประสงค์ที่แจ้งไว้
-                            </Text>
-
-                            <TouchableOpacity
-                                style={styles.closeButton}
-                                onPress={() => setShowConsent(false)}
-                            >
-                                <Text style={styles.closeButtonText}>
-                                    ปิด
-                                </Text>
-                            </TouchableOpacity>
-
-                        </View>
-
-                    </View>
-                </Modal>
-
 
             </ScrollView>
         </KeyboardAvoidingView>
@@ -416,96 +365,6 @@ const styles = StyleSheet.create({
         color: "#f21212",
         fontWeight: "bold",
     },
-    /////////////////////////////////////////
-
-    consentContainer: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        marginHorizontal: 20,
-        marginTop: 20,
-        marginBottom: 10,
-    },
-    consentRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginRight: 10,
-    },
-    consentContent: {
-        flexDirection: "column",
-        alignItems: "flex-start",
-    },
-    checkbox: {
-        width: 22,
-        height: 22,
-        borderWidth: 1,
-        borderColor: "#999",
-        borderRadius: 4,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    checkboxChecked: {
-        backgroundColor: "#2196F3",
-        borderColor: "#2196F3",
-    },
-    checkmark: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "bold",
-    },
-    consentText: {
-        fontSize: 14,
-        color: "#333",
-        flex: 1,
-    },
-    detailText: {
-        fontSize: 13,
-        color: "#2196F3",
-    },
-
-    // loginButtonDisabled: {
-    //     backgroundColor: "#ccc",
-    // },
-
-    // modalOverlay: {
-    //     flex: 1,
-    //     backgroundColor: "rgba(0,0,0,0.5)",
-    //     justifyContent: "center",
-    //     paddingHorizontal: 20,
-    // },
-
-    // modalContainer: {
-    //     backgroundColor: "#fff",
-    //     borderRadius: 15,
-    //     padding: 20,
-    // },
-
-    // modalTitle: {
-    //     fontSize: 18,
-    //     fontWeight: "bold",
-    //     marginBottom: 15,
-    // },
-
-    // modalText: {
-    //     fontSize: 14,
-    //     lineHeight: 22,
-    //     color: "#333",
-    //     marginBottom: 12,
-    // },
-
-    // closeButton: {
-    //     backgroundColor: "#2196F3",
-    //     borderRadius: 10,
-    //     paddingVertical: 10,
-    //     alignItems: "center",
-    //     marginTop: 5,
-    // },
-
-    // closeButtonText: {
-    //     color: "#fff",
-    //     fontSize: 15,
-    //     fontWeight: "bold",
-    // },
-
 
 });
 

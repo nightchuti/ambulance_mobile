@@ -3,16 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView,
 import * as ImagePicker from "expo-image-picker";
 import SelectFormInput from "../components/SelectFormInput";
 import { useUser } from "../context/UserContext";
-import { updateUserProfile, getUserPrivate } from "../services/userService";
+import { updateUserProfile } from "../services/userService";
 import { uploadImage } from "../services/cloudinaryService";
 import { Ionicons } from "@expo/vector-icons";
 
 const NAME_REGEX = /^[ก-๙a-zA-Z\s]{2,30}$/;
 const PHONE_REGEX = /^0[689]\d{8}$/;
 const GENDER_OPTIONS = ["ชาย", "หญิง", "อื่นๆ"];
-
-const maskIdCard = (id) =>
-    id?.length === 13 ? `${id[0]}-xxxx-xxxxx-${id.slice(10, 12)}-${id[12]}` : "-";
 
 const Field = ({ label, children }) => (
     <View style={styles.field}>
@@ -35,15 +32,9 @@ const ProfileScreen = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [idcard, setIdcard] = useState("");
     const [form, setForm] = useState({ firstname: "", lastname: "", gender: "", phone: "" });
 
     const setField = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }));
-
-    //ดึงเลขบัตรเก็บใน state
-    useEffect(() => {
-        getUserPrivate(uid).then((d) => d && setIdcard(d.idcard)).catch(() => { });
-    }, [uid]);
 
     if (!profile) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
 
@@ -150,8 +141,9 @@ const ProfileScreen = () => {
             <Field label="วัน/เดือน/ปีเกิด">
                 <Text style={styles.value}>{birthText}</Text>
             </Field>
+            
             <Field label="เลขบัตรประชาชน">
-                <Text style={styles.value}>{maskIdCard(idcard)}</Text>
+                <Text style={styles.value}>{profile.idcardMasked || "-"}</Text>
             </Field>
 
             <TextField label="เบอร์โทรศัพท์" editing={isEditing} display={profile.phone}

@@ -58,6 +58,7 @@ const DateFormInput = ({ label, placeholder = "วว/ดด/ปปปป", valu
                     value={text}
                     onChangeText={handleTextChange}
                     placeholder={placeholder}
+                    placeholderTextColor="#999"
                     keyboardType="number-pad"
                     maxLength={10}
                 />
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         paddingVertical: 10,
+        color: "#000",
     },
     inputRowError: {
         borderColor: "#f21212"

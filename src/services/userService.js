@@ -4,10 +4,11 @@ import { db } from "../firebase/config";
 const userRef = (uid) => doc(db, "users", uid);
 const privateRef = (uid) => doc(db, "users_private", uid);
 
-export const createUserProfile = async (uid, { idcard, ...profile }) => {
+export const createUserProfile = async (uid, { idcardSealed, idcardMasked, ...profile }) => {
   const batch = writeBatch(db);
   batch.set(userRef(uid), {
     ...profile,
+    idcardMasked,
     photoURL: null,
     photoPublicId: null,
     consent: true,
@@ -15,7 +16,7 @@ export const createUserProfile = async (uid, { idcard, ...profile }) => {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-  batch.set(privateRef(uid), { idcard, createdAt: serverTimestamp() });
+  batch.set(privateRef(uid), { idcardSealed, createdAt: serverTimestamp() });
   await batch.commit();
 };
 
