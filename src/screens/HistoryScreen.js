@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     status: {
         fontSize: 12,
         fontWeight: "bold",
-        maxWidth: 90,
+        maxWidth: 100,
         textAlign: "right"
     },
     empty: {
