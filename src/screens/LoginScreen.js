@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase/config";
 import TextFormInput from "../components/TextFormInput";
@@ -97,57 +97,66 @@ const LoginScreen = ({ navigation }) => {
         );
     };
     return (
-        <View style={styles.container}>
-            <View style={styles.logosection}>
-                <Image source={require('../../assets/logo.png')} style={styles.logo} />
-            </View>
-            <Text style={styles.title}>KPS Ambulance</Text>
-            <View style={styles.formSection}>
-                <TextFormInput
-                    label="อีเมล"
-                    placeholder="example@email.com"
-                    value={email}
-                    onChangeText={handleChange(setEmail, "email")}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    error={formErrors.email}
-                />
-                <TextFormInput
-                    label="รหัสผ่าน"
-                    placeholder="กรอกรหัสผ่านของคุณ"
-                    value={password}
-                    onChangeText={handleChange(setPassword, "password")}
-                    secureTextEntry={true}
-                    autoCapitalize="none"
-                    error={formErrors.password}
-                />
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior="height"
+        >
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={{ flexGrow: 1, paddingTop: 20 }}
+                keyboardShouldPersistTaps="handled"
+            >
+                <View style={styles.logosection}>
+                    <Image source={require('../../assets/logo.png')} style={styles.logo} />
+                </View>
+                <Text style={styles.title}>KPS Ambulance</Text>
+                <View style={styles.formSection}>
+                    <TextFormInput
+                        label="อีเมล"
+                        placeholder="example@email.com"
+                        value={email}
+                        onChangeText={handleChange(setEmail, "email")}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        error={formErrors.email}
+                    />
+                    <TextFormInput
+                        label="รหัสผ่าน"
+                        placeholder="กรอกรหัสผ่านของคุณ"
+                        value={password}
+                        onChangeText={handleChange(setPassword, "password")}
+                        secureTextEntry={true}
+                        autoCapitalize="none"
+                        error={formErrors.password}
+                    />
 
-                <TouchableOpacity
-                    style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-                    onPress={handleLogin}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" style={{ paddingVertical: 10 }} />
-                    ) : (
-                        <Text style={styles.loginButtonText}>เข้าสู่ระบบ</Text>
-                    )}
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                        onPress={handleLogin}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#fff" style={{ paddingVertical: 10 }} />
+                        ) : (
+                            <Text style={styles.loginButtonText}>เข้าสู่ระบบ</Text>
+                        )}
+                    </TouchableOpacity>
 
-                <TouchableOpacity style={styles.forgotPasswordButton}
-                    onPress={handleForgotPassword}
-                >
-                    <Text style={styles.forgotPasswordButtonText}>ลืมรหัสผ่าน ?</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity style={styles.forgotPasswordButton}
+                        onPress={handleForgotPassword}
+                    >
+                        <Text style={styles.forgotPasswordButtonText}>ลืมรหัสผ่าน ?</Text>
+                    </TouchableOpacity>
 
-            </View>
-            <View style={styles.signUpSection}>
-                <Text style={styles.signUpText}>ยังไม่มีบัญชี? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                    <Text style={styles.signUpButtonText}>สมัครสมาชิก</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+                </View>
+                <View style={styles.signUpSection}>
+                    <Text style={styles.signUpText}>ยังไม่มีบัญชี? </Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                        <Text style={styles.signUpButtonText}>สมัครสมาชิก</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     )
 }
 
@@ -158,18 +167,21 @@ const styles = StyleSheet.create({
         backgroundColor: '#eeeeee',
     },
     logosection: {
-        width: 150,
-        height: 150,
-        marginTop: 100,
+        width: "35%",
+        aspectRatio: 1,
+        minWidth: 100,
+        maxWidth: 150,
+        marginTop: "auto",
         borderRadius: 30,
         alignSelf: "center",
         backgroundColor: "#f21212",
+        justifyContent: "center",
     },
     logo: {
-        width: 100,
-        height: 100,
+        width: "67%",
+        height: "67%",
         alignSelf: "center",
-        marginTop: 25,
+        resizeMode: "contain",
     },
     title: {
         fontSize: 24,

@@ -29,6 +29,7 @@ const HeaderHomeMenu = () => {
       visible={visible}
       onDismiss={closeMenu}
       anchorPosition="bottom"
+      statusBarHeight={5}
       contentStyle={styles.menu}
       anchor={
         <TouchableOpacity
@@ -85,7 +86,6 @@ const styles = StyleSheet.create({
     width: 150,
     paddingVertical: 3,
     borderRadius: 10,
-    marginTop: 5,
   },
   item: {
     height: 45,

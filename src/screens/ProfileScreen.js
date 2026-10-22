@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert, ActivityIndicator, } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import SelectFormInput from "../components/SelectFormInput";
 import { useUser } from "../context/UserContext";
@@ -102,79 +102,91 @@ const ProfileScreen = () => {
         : "-";
 
     return (
-        <ScrollView style={styles.container}>
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior="height"
+        >
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                keyboardShouldPersistTaps="handled"
+            >
 
-            <View style={styles.profileSection}>
-                {profile.photoURL ? (
-                    <Image source={{ uri: profile.photoURL }} style={styles.profileImage} />
-                ) : (
-                    <View style={[styles.profileImage, styles.profilePlaceholder]}>
-                        <Ionicons name="person" size={56} color="#ddd" />
-                    </View>
-                )}
+                <View style={styles.profileSection}>
+                    {profile.photoURL ? (
+                        <Image source={{ uri: profile.photoURL }} style={styles.profileImage} />
+                    ) : (
+                        <View style={[styles.profileImage, styles.profilePlaceholder]}>
+                            <Ionicons name="person" size={56} color="#ddd" />
+                        </View>
+                    )}
 
-                {isEditing && (
-                    <TouchableOpacity onPress={handleChangeProfileImage} disabled={saving}>
-                        <Text style={styles.changeImageText}>เปลี่ยนรูปโปรไฟล์</Text>
-                    </TouchableOpacity>
-                )}
-            </View>
-
-            <TextField label="ชื่อ" editing={isEditing} display={profile.firstname}
-                value={form.firstname} onChangeText={setField("firstname")} />
-            <TextField label="นามสกุล" editing={isEditing} display={profile.lastname}
-                value={form.lastname} onChangeText={setField("lastname")} />
-
-            <Field label="เพศ">
-                {isEditing ? (
-                    <SelectFormInput
-                        value={form.gender}
-                        onValueChange={setField("gender")}
-                        placeholder="เลือกเพศของคุณ"
-                        options={GENDER_OPTIONS}
-                    />
-                ) : (
-                    <Text style={styles.value}>{profile.gender}</Text>
-                )}
-            </Field>
-
-            <Field label="วัน/เดือน/ปีเกิด">
-                <Text style={styles.value}>{birthText}</Text>
-            </Field>
-            
-            <Field label="เลขบัตรประชาชน">
-                <Text style={styles.value}>{profile.idcardMasked || "-"}</Text>
-            </Field>
-
-            <TextField label="เบอร์โทรศัพท์" editing={isEditing} display={profile.phone}
-                value={form.phone} onChangeText={setField("phone")}
-                keyboardType="phone-pad" maxLength={10} />
-
-            {isEditing ? (
-                <View style={styles.buttonRow}>
-                    <TouchableOpacity style={styles.cancelButton} onPress={() => setIsEditing(false)} disabled={saving}>
-                        <Text style={styles.cancelText}>ยกเลิก</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-                        {saving
-                            ? <ActivityIndicator color="#fff" />
-                            : <Text style={styles.buttonText}>บันทึก</Text>}
-                    </TouchableOpacity>
+                    {isEditing && (
+                        <TouchableOpacity onPress={handleChangeProfileImage} disabled={saving}>
+                            <Text style={styles.changeImageText}>เปลี่ยนรูปโปรไฟล์</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
-            ) : (
-                <TouchableOpacity style={styles.editButton} onPress={startEdit}>
-                    <Text style={styles.buttonText}>แก้ไขข้อมูล</Text>
-                </TouchableOpacity>
-            )}
-        </ScrollView>
+
+                <TextField label="ชื่อ" editing={isEditing} display={profile.firstname}
+                    value={form.firstname} onChangeText={setField("firstname")} />
+                <TextField label="นามสกุล" editing={isEditing} display={profile.lastname}
+                    value={form.lastname} onChangeText={setField("lastname")} />
+
+                <Field label="เพศ">
+                    {isEditing ? (
+                        <SelectFormInput
+                            value={form.gender}
+                            onValueChange={setField("gender")}
+                            placeholder="เลือกเพศของคุณ"
+                            options={GENDER_OPTIONS}
+                        />
+                    ) : (
+                        <Text style={styles.value}>{profile.gender}</Text>
+                    )}
+                </Field>
+
+                <Field label="วัน/เดือน/ปีเกิด">
+                    <Text style={styles.value}>{birthText}</Text>
+                </Field>
+
+                <Field label="เลขบัตรประชาชน">
+                    <Text style={styles.value}>{profile.idcardMasked || "-"}</Text>
+                </Field>
+
+                <TextField label="เบอร์โทรศัพท์" editing={isEditing} display={profile.phone}
+                    value={form.phone} onChangeText={setField("phone")}
+                    keyboardType="phone-pad" maxLength={10} />
+
+                {isEditing ? (
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity style={styles.cancelButton} onPress={() => setIsEditing(false)} disabled={saving}>
+                            <Text style={styles.cancelText}>ยกเลิก</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
+                            {saving
+                                ? <ActivityIndicator color="#fff" />
+                                : <Text style={styles.buttonText}>บันทึก</Text>}
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <TouchableOpacity style={styles.editButton} onPress={startEdit}>
+                        <Text style={styles.buttonText}>แก้ไขข้อมูล</Text>
+                    </TouchableOpacity>
+                )}
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
         backgroundColor: "#f5f5f5",
+    },
+    content: {
+        padding: 20,
+        paddingBottom: 40,
     },
 
     profileSection: {

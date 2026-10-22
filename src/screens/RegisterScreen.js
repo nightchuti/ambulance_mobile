@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
 import TextFormInput from "../components/TextFormInput";
 import SelectFormInput from "../components/SelectFormInput";
 import DateFormInput from "../components/DateFormInput";
@@ -175,7 +175,10 @@ const RegisterScreen = ({ navigation }) => {
             style={{ flex: 1 }}
             behavior="height"
         >
-            <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+            <ScrollView
+                style={styles.container}
+                keyboardShouldPersistTaps="handled"
+            >
 
                 <View style={styles.logosection}>
                     <Image source={require('../../assets/logo.png')} style={styles.logo} />
@@ -308,7 +311,7 @@ const styles = StyleSheet.create({
     logosection: {
         width: 150,
         height: 150,
-        marginTop: 100,
+        marginTop: 40,
         borderRadius: 30,
         alignSelf: "center",
         backgroundColor: "#f21212",

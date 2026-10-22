@@ -16,6 +16,9 @@ const HomeScreen = ({ navigation }) => {
     const [sending, setSending] = useState(false);
     const [myIncidents, setMyIncidents] = useState([]);
     const [aeds, setAeds] = React.useState([]);
+    const [sosH, setSosH] = useState(0);
+
+    const sosSize = Math.min(Math.max(sosH * 0.6, 120), 240);
 
     useEffect(
         () => subscribeAEDs(setAeds, (e) => console.warn(e)), []
@@ -104,15 +107,27 @@ const HomeScreen = ({ navigation }) => {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={{ flexGrow: 1 }}
+            bounces={false}
+            showsVerticalScrollIndicator={false}
+        >
 
-            <View style={styles.sosSection}>
-                <TouchableOpacity style={styles.sosButton} onPress={handleSOS} disabled={sending}>
+            <View
+                style={styles.sosSection}
+                onLayout={(e) => setSosH(e.nativeEvent.layout.height)}
+            >
+                <TouchableOpacity
+                    style={[styles.sosButton, { width: sosSize, height: sosSize, borderRadius: sosSize / 2 }]}
+                    onPress={handleSOS}
+                    disabled={sending}
+                >
                     {sending ? <ActivityIndicator color="#fff" size="large" /> : (
                         <>
-                            <MaterialIcons name="warning" size={55} color="#fff" />
-                            <Text style={styles.sosText}>SOS</Text>
-                            <Text style={styles.sosSub}>แจ้งเหตุด่วน</Text>
+                            <MaterialIcons name="warning" size={sosSize * 0.37} color="#fff" />
+                            <Text style={[styles.sosText]}>SOS</Text>
+                            <Text style={[styles.sosSub]}>แจ้งเหตุด่วน</Text>
                         </>
                     )}
                 </TouchableOpacity>
@@ -140,17 +155,6 @@ const HomeScreen = ({ navigation }) => {
                     </Text>
                 )}
             </View>
-
-            {/* <TouchableOpacity style={styles.aedCard}>
-                <View style={styles.aedIcon}>
-                    <MaterialIcons name="favorite" size={25} color="#F59E0B" />
-                </View>
-                <View style={{ flex: 1, marginLeft: 15 }}>
-                    <Text style={styles.aedTitle}>AED ที่ใกล้ที่สุด</Text>
-                    <Text style={styles.aedSub}>กองบริหารกิจการนิสิต</Text>
-                </View>
-                <MaterialIcons name="chevron-right" size={30} color="#C97B00" />
-            </TouchableOpacity> */}
 
             <TouchableOpacity style={styles.aedCard} onPress={() => navigation.navigate("AEDMap")}>
                 <View style={styles.aedIcon}>
@@ -197,22 +201,20 @@ const styles = StyleSheet.create({
         flex: 1,
         width: "100%",
         backgroundColor: '#eeeeee',
-        marginBottom: 20,
     },
 
     sosSection: {
-        height: 240,
+        flexGrow: 1, 
+        flexBasis: 0,
+        minHeight: 240,  
         backgroundColor: "#1E213B",
         borderBottomLeftRadius: 40,
         borderBottomRightRadius: 40,
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
     },
     sosButton: {
-        width: 150,
-        height: 150,
         backgroundColor: "#f21212",
-        borderRadius: 100,
         justifyContent: "center",
         alignItems: "center",
         borderWidth: 2,
@@ -298,7 +300,7 @@ const styles = StyleSheet.create({
     type: {
         fontSize: 16,
         fontWeight: "bold",
-        margin: 15,
+        margin: 10,
         marginHorizontal: 20,
     },
     typeSection: {
@@ -306,15 +308,17 @@ const styles = StyleSheet.create({
         flexWrap: "wrap",
         justifyContent: "space-evenly",
         marginHorizontal: 20,
+        rowGap: 5,
     },
     typeOption: {
         width: "30%",
-        height: 70,
+        aspectRatio: 1.25,
+        maxHeight: 85,
         backgroundColor: "#fff",
         borderWidth: 1,
         borderColor: "#fff",
         borderRadius: 20,
-        marginBottom: 10,
+        marginBottom: 3,
         justifyContent: "center",
         alignItems: "center",
         elevation: 3
@@ -328,7 +332,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         backgroundColor: "#cccccc",
         marginHorizontal: 20,
-        marginVertical: 10,
+        marginBottom: 10,
         borderRadius: 15,
         justifyContent: "center",
         alignItems: "center",
@@ -346,7 +350,8 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         justifyContent: "center",
         alignItems: "center",
-        padding: 10
+        padding: 10,
+        marginBottom: 20,
     },
     callText: {
         color: "#fff",

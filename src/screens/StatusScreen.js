@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
 
     cancelBtn: { 
         margin: 12, 
-        marginBottom: 20, 
+        marginBottom: 25, 
         padding: 14, 
         borderRadius: 10, 
         borderWidth: 1, 
