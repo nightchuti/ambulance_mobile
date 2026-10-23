@@ -15,10 +15,10 @@ export const getTypeInfo = (key) =>
   [...INCIDENT_TYPES, SOS_TYPE].find((t) => t.key === key) || INCIDENT_TYPES[5];
 
 export const SEVERITY = [
-  { key: "low", title: "ไม่รุนแรง", color: "#22C55E" },
-  { key: "medium", title: "ปานกลาง", color: "#F59E0B" },
-  { key: "high", title: "รุนแรง", color: "#F97316" },
-  { key: "critical", title: "วิกฤต", color: "#EF4444" },
+  { key: "low", title: "ไม่รุนแรง", color: "#22C55E", desc: "ผู้ป่วยรู้สึกตัวดี ช่วยเหลือตัวเองได้ บาดเจ็บเล็กน้อย" },
+  { key: "medium", title: "ปานกลาง", color: "#F59E0B", desc: "บาดเจ็บชัดเจนหรือเจ็บปวดมาก แต่ยังรู้สึกตัวและหายใจได้ปกติ" },
+  { key: "high", title: "รุนแรง", color: "#F97316", desc: "บาดเจ็บหนัก เลือดออกมาก สงสัยกระดูกหัก หรือหายใจลำบาก" },
+  { key: "critical", title: "วิกฤต", color: "#EF4444", desc: "หมดสติ ไม่หายใจ หัวใจหยุดเต้น หรือชีวิตอยู่ในอันตรายทันที" },
 ];
 export const getSeverityInfo = (key) => SEVERITY.find((s) => s.key === key);
 

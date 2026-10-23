@@ -44,7 +44,7 @@ const ReportScreen = ({ navigation, route }) => {
     const handleSend = async () => {
         if (sending) return;
         if (!selectedType) return Alert.alert("กรุณาเลือกประเภทเหตุ");
-        if (!severity) return Alert.alert("กรุณาเลือกระดับความรุนแรง");
+        if (!severity) return Alert.alert("กรุณาเลือกระดับความรุนแรง", "โปรดประเมินสถานการณ์ แล้วเลือกระดับที่ใกล้เคียงที่สุด");
         if (!location) return Alert.alert("ยังไม่พบตำแหน่ง", "กรุณารอสักครู่หรือกดแก้ไขตำแหน่ง");
         if (!profile) return Alert.alert("กรุณารอสักครู่", "กำลังโหลดข้อมูลผู้ใช้");
 
@@ -54,7 +54,7 @@ const ReportScreen = ({ navigation, route }) => {
             setSending(false);
             return;
         }
-        
+
         try {
             const incidentId = newIncidentId();
             let uploaded = [];
@@ -121,6 +121,11 @@ const ReportScreen = ({ navigation, route }) => {
                             );
                         })}
                     </View>
+                    {severity && (
+                        <Text style={styles.severityDesc}>
+                            {SEVERITY.find((s) => s.key === severity).desc}
+                        </Text>
+                    )}
                 </View>
 
                 <View style={styles.card}>
@@ -258,6 +263,12 @@ const styles = StyleSheet.create({
     },
     severityText: {
         fontSize: 14,
+    },
+    severityDesc: {
+        fontSize: 13,
+        marginTop: 8,
+        marginLeft: 2,
+        color: "#64748B",
     },
 
     locText: {

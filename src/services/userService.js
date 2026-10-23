@@ -8,6 +8,7 @@ export const createUserProfile = async (uid, { idcardSealed, idcardMasked, ...pr
   const batch = writeBatch(db);
   batch.set(userRef(uid), {
     ...profile,
+    role: "user",
     idcardMasked,
     photoURL: null,
     photoPublicId: null,
@@ -18,17 +19,6 @@ export const createUserProfile = async (uid, { idcardSealed, idcardMasked, ...pr
   });
   batch.set(privateRef(uid), { idcardSealed, createdAt: serverTimestamp() });
   await batch.commit();
-};
-
-//เหมือนยังไม่ได้ใช้
-export const getUserProfile = async (uid) => {
-  const snap = await getDoc(userRef(uid));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-};
-
-export const getUserPrivate = async (uid) => {
-  const snap = await getDoc(privateRef(uid));
-  return snap.exists() ? snap.data() : null;
 };
 
 export const updateUserProfile = (uid, data) =>
